@@ -37,12 +37,8 @@ class MyVocabularyProcessor(learn.preprocessing.VocabularyProcessor):
         """
         for tokens in self._tokenizer(raw_documents):
             word_ids = np.zeros(self.max_document_length, np.int64)
-            idx = 0
-            if len(tokens)>0:
-                for i in xrange(self.max_document_length):
-                    if idx >= len(tokens):
-                        idx=0
-                    token=tokens[idx]
-                    word_ids[i] = self.vocabulary_.get(token)
-                    idx=idx+1
+            for idx, token in enumerate(tokens):
+                if idx >= self.max_document_length:
+                    break
+                word_ids[idx] = self.vocabulary_.get(token)
             yield word_ids
