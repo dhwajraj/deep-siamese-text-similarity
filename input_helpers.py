@@ -34,7 +34,23 @@ class InputHelper(object):
             x2.append(combined_shuff[i])
             y.append(0) #np.array([1,0]))
         return np.asarray(x1),np.asarray(x2),np.asarray(y)
-   
+
+
+    def getTsvTestData(self, filepath):
+        print("Loading testing/labelled data from "+filepath)
+        x1=[]
+        x2=[]
+        y=[]
+        # positive samples from file
+        for line in open(filepath):
+            l=line.strip().split("\t")
+            if len(l)<3:
+                continue
+            x1.append(l[1])
+            x2.append(l[2])
+            y.append(int(l[0])) #np.array([0,1]))
+        return np.asarray(x1),np.asarray(x2),np.asarray(y)  
+ 
     def batch_iter(self, data, batch_size, num_epochs, shuffle=True):
         """
         Generates a batch iterator for a dataset.
@@ -56,19 +72,21 @@ class InputHelper(object):
                 end_index = min((batch_num + 1) * batch_size, data_size)
                 yield shuffled_data[start_index:end_index]
                 
-    def dumpValidation(self,x_text,y,shuffled_index,dev_idx,i):
+    def dumpValidation(self,x1_text,x2_text,y,shuffled_index,dev_idx,i):
         print("dumping validation "+str(i))
-        x_shuffled=x_text[shuffled_index]
+        x1_shuffled=x1_text[shuffled_index]
+        x2_shuffled=x2_text[shuffled_index]
         y_shuffled=y[shuffled_index]
-        x_dev=x_shuffled[dev_idx:]
+        x1_dev=x1_shuffled[dev_idx:]
+        x2_dev=x2_shuffled[dev_idx:]
         y_dev=y_shuffled[dev_idx:]
-        del x_shuffled
+        del x1_shuffled
         del y_shuffled
         with open('validation.txt'+str(i),'w') as f:
-            for text,label in zip(x_dev,y_dev):
-                f.write(str(label)+"\t"+text+"\n")
+            for text1,text2,label in zip(x1_dev,x2_dev,y_dev):
+                f.write(str(label)+"\t"+text1+"\t"+text2+"\n")
             f.close()
-        del x_dev
+        del x1_dev
         del y_dev
     
     # Data Preparatopn
@@ -98,8 +116,8 @@ class InputHelper(object):
         dev_idx = -1*len(y_shuffled)*percent_dev//100
         del x1
         del x2
-        del y
         # Split train/test set
+        self.dumpValidation(x1_text,x2_text,y,shuffle_indices,dev_idx,0)
         # TODO: This is very crude, should use cross-validation
         x1_train, x1_dev = x1_shuffled[:dev_idx], x1_shuffled[dev_idx:]
         x2_train, x2_dev = x2_shuffled[:dev_idx], x2_shuffled[dev_idx:]
@@ -111,19 +129,18 @@ class InputHelper(object):
         gc.collect()
         return train_set,dev_set,vocab_processor,sum_no_of_batches
     
-    def getTestDataSet(self, data_path, vocab_path, max_document_length, filter_h_pad):
-        x_temp,y = self.getTsvData(data_path)
+    def getTestDataSet(self, data_path, vocab_path, max_document_length):
+        x1_temp,x2_temp,y = self.getTsvTestData(data_path)
 
         # Build vocabulary
-        vocab_processor = MyVocabularyProcessor(max_document_length,min_frequency=1)
+        vocab_processor = MyVocabularyProcessor(max_document_length,min_frequency=0)
         vocab_processor = vocab_processor.restore(vocab_path)
         print len(vocab_processor.vocabulary_)
 
-        x = np.asarray(list(vocab_processor.transform(x_temp)))
-        x = np.concatenate((np.zeros((len(x),filter_h_pad)),x),axis=1)
+        x1 = np.asarray(list(vocab_processor.transform(x1_temp)))
+        x2 = np.asarray(list(vocab_processor.transform(x2_temp)))
         # Randomly shuffle data
-        del x_temp
         del vocab_processor
         gc.collect()
-        return x, y
+        return x1,x2, y
 
