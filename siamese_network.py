@@ -9,9 +9,9 @@ class SiameseLSTM(object):
     
     def BiRNN(self, x, dropout, scope):
         n_input=100
-        n_steps=50
+        n_steps=30
         n_hidden=n_steps
-        n_layers=4
+        n_layers=3
         # Prepare data shape to match `bidirectional_rnn` function requirements
         # Current data input shape: (batch_size, n_steps, n_input) (?, seq_len, embedding_size)
         # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)

@@ -11,20 +11,21 @@ from input_helpers import InputHelper
 from siamese_network import SiameseLSTM
 from tensorflow.contrib import learn
 import gzip
+from random import random
 # Parameters
 # ==================================================
 
 tf.flags.DEFINE_integer("embedding_dim", 100, "Dimensionality of character embedding (default: 300)")
 tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
-tf.flags.DEFINE_string("training_files", "person_match.train", "training file (default: None)")
+tf.flags.DEFINE_string("training_files", "person_match.train2", "training file (default: None)")
 tf.flags.DEFINE_integer("hidden_units", 50, "Number of hidden units in softmax regression layer (default:50)")
 
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 30000, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 200, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 200, "Save model after this many steps (default: 100)")
+tf.flags.DEFINE_integer("num_epochs", 300, "Number of training epochs (default: 200)")
+tf.flags.DEFINE_integer("evaluate_every", 1000, "Evaluate model on dev set after this many steps (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 1000, "Save model after this many steps (default: 100)")
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
@@ -40,7 +41,7 @@ if FLAGS.training_files==None:
     print "Input Files List is empty. use --training_files argument."
     exit()
  
-max_document_length=50
+max_document_length=30
 inpH = InputHelper()
 train_set, dev_set, vocab_processor,sum_no_of_batches = inpH.getDataSets(FLAGS.training_files,max_document_length, 10, FLAGS.batch_size)
 
@@ -109,12 +110,20 @@ with tf.Graph().as_default():
         """
         A single training step
         """
-        feed_dict = {
+        if random()>0.5:
+            feed_dict = {
                              siameseModel.input_x1: x1_batch,
                              siameseModel.input_x2: x2_batch,
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
-        }
+            }
+        else:
+            feed_dict = {
+                             siameseModel.input_x1: x2_batch,
+                             siameseModel.input_x2: x1_batch,
+                             siameseModel.input_y: y_batch,
+                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+            }
         _, step, loss, accuracy, dist = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
@@ -128,13 +137,21 @@ with tf.Graph().as_default():
     def dev_step(x1_batch, x2_batch, y_batch):
         """
         A single training step
-        """
-        feed_dict = {
+        """ 
+        if random()>0.5:
+            feed_dict = {
                              siameseModel.input_x1: x1_batch,
                              siameseModel.input_x2: x2_batch,
                              siameseModel.input_y: y_batch,
-                             siameseModel.dropout_keep_prob: 1.0,
-        }
+                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+            }
+        else:
+            feed_dict = {
+                             siameseModel.input_x1: x2_batch,
+                             siameseModel.input_x2: x1_batch,
+                             siameseModel.input_y: y_batch,
+                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+            }
         step, loss, accuracy, dist = sess.run([global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)

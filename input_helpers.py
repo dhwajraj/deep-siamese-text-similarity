@@ -8,7 +8,11 @@ import gc
 from tensorflow.contrib import learn
 from gensim.models.word2vec import Word2Vec
 import gzip
+from random import random
 from preprocess import MyVocabularyProcessor
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 class InputHelper(object):
     
@@ -22,8 +26,12 @@ class InputHelper(object):
             l=line.strip().split("\t")
             if len(l)<2:
                 continue
-            x1.append(l[0])
-            x2.append(l[1])
+            if random() > 0.5:
+               x1.append(l[0].lower())
+               x2.append(l[1].lower())
+            else:
+               x1.append(l[1].lower())
+               x2.append(l[0].lower())
             y.append(1)#np.array([0,1]))
         # generate random negative samples
         combined = np.asarray(x1+x2)
@@ -46,8 +54,8 @@ class InputHelper(object):
             l=line.strip().split("\t")
             if len(l)<3:
                 continue
-            x1.append(l[1])
-            x2.append(l[2])
+            x1.append(l[1].lower())
+            x2.append(l[2].lower())
             y.append(int(l[0])) #np.array([0,1]))
         return np.asarray(x1),np.asarray(x2),np.asarray(y)  
  
