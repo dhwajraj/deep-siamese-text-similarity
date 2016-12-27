@@ -7,9 +7,9 @@ class SiameseLSTM(object):
     Uses an character embedding layer, followed by a biLSTM and Energy Loss layer.
     """
     
-    def BiRNN(self, x, dropout, scope):
-        n_input=100
-        n_steps=30
+    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length):
+        n_input=embedding_size
+        n_steps=sequence_length
         n_hidden=n_steps
         n_layers=3
         # Prepare data shape to match `bidirectional_rnn` function requirements
@@ -74,8 +74,8 @@ class SiameseLSTM(object):
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
-        self.out1=self.BiRNN(self.embedded_chars1, self.dropout_keep_prob, "side1")
-        self.out2=self.BiRNN(self.embedded_chars2, self.dropout_keep_prob, "side2")
+        self.out1=self.BiRNN(self.embedded_chars1, self.dropout_keep_prob, "side1", embedding_size, sequence_length)
+        self.out2=self.BiRNN(self.embedded_chars2, self.dropout_keep_prob, "side2", embedding_size, sequence_length)
         self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.sub(self.out1,self.out2)),1,keep_dims=True))
         self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
         self.distance = tf.reshape(self.distance, [-1], name="distance")
