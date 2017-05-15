@@ -13,9 +13,9 @@ from input_helpers import InputHelper
 # Eval Parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
 tf.flags.DEFINE_string("checkpoint_dir", "", "Checkpoint directory from training run")
-tf.flags.DEFINE_string("eval_filepath", "match_valid.tsv", "Evaluate on this data (Default: None)")
-tf.flags.DEFINE_string("vocab_filepath", "runs/1479874609/checkpoints/vocab", "Load training time vocabulary (Default: None)")
-tf.flags.DEFINE_string("model", "runs/1479874609/checkpoints/model-32000", "Load trained model checkpoint (Default: None)")
+tf.flags.DEFINE_string("eval_filepath", None, "Evaluate on this data (Default: None)")
+tf.flags.DEFINE_string("vocab_filepath", None, "Load training time vocabulary (Default: None)")
+tf.flags.DEFINE_string("model", None, "Load trained model checkpoint (Default: None)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -52,7 +52,7 @@ with graph.as_default():
     with sess.as_default():
         # Load the saved meta graph and restore variables
         saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
         saver.restore(sess, checkpoint_file)
 
         # Get the placeholders from the graph by name
