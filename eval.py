@@ -5,7 +5,7 @@ import numpy as np
 import os
 import time
 import datetime
-from tensorflow.contrib import learn
+#from tensorflow.contrib import learn
 from input_helpers import InputHelper
 # Parameters
 # ==================================================
@@ -42,7 +42,7 @@ print("\nEvaluating...\n")
 # Evaluation
 # ==================================================
 checkpoint_file = FLAGS.model
-print checkpoint_file
+print(checkpoint_file)
 graph = tf.Graph()
 with graph.as_default():
     session_conf = tf.ConfigProto(
@@ -71,7 +71,7 @@ with graph.as_default():
         batches = inpH.batch_iter(list(zip(x1_test,x2_test,y_test)), 2*FLAGS.batch_size, 1, shuffle=False)
         # Collect the predictions here
         all_predictions = []
-	all_d=[]
+        all_d=[]
         for db in batches:
             x1_dev_b,x2_dev_b,y_dev_b = zip(*db)
             batch_predictions, batch_acc = sess.run([predictions,accuracy], {input_x1: x1_dev_b, input_x2: x2_dev_b, input_y:y_dev_b, dropout_keep_prob: 1.0})
@@ -85,6 +85,6 @@ with graph.as_default():
             all_d = np.concatenate([all_d, d])
             print("DEV acc {}".format(batch_acc))
         for ex in all_predictions:
-            print ex 
+            print(ex) 
         correct_predictions = float(np.mean(all_d == y_test))
         print("Accuracy: {:g}".format(correct_predictions))

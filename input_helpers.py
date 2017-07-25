@@ -5,7 +5,7 @@ from collections import Counter
 import numpy as np
 import time
 import gc
-from tensorflow.contrib import learn
+#from tensorflow.contrib import learn
 from gensim.models.word2vec import Word2Vec
 import gzip
 from random import random
@@ -143,7 +143,7 @@ class InputHelper(object):
         # Build vocabulary
         vocab_processor = MyVocabularyProcessor(max_document_length,min_frequency=0)
         vocab_processor = vocab_processor.restore(vocab_path)
-        print len(vocab_processor.vocabulary_)
+        print(len(vocab_processor.vocabulary_))
 
         x1 = np.asarray(list(vocab_processor.transform(x1_temp)))
         x2 = np.asarray(list(vocab_processor.transform(x2_temp)))
