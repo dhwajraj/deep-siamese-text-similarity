@@ -52,7 +52,7 @@ with graph.as_default():
     with sess.as_default():
         # Load the saved meta graph and restore variables
         saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
         saver.restore(sess, checkpoint_file)
 
         # Get the placeholders from the graph by name
