@@ -53,7 +53,6 @@ class InputHelper(object):
                 l.append(line.strip())
 
         # positive samples from file
-        print(len(l))
         num_positive_samples = len(l)
         for i in range(0,num_positive_samples,2):
             if random() > 0.5:
@@ -64,7 +63,6 @@ class InputHelper(object):
                 x2.append(self.getfilenames(l[i], base_filepath, mapping_dict, max_document_length))
 
             y.append(1)#np.array([0,1]))
-        print(len(y))
 
         # generate random negative samples
         #combined = np.asarray(x1+x2)
@@ -146,9 +144,9 @@ class InputHelper(object):
         for img_paths in seq_paths:
             for img_path in img_paths:
                 img = misc.imread(img_path)
-                img = self.normalize_input(img, conv_model_spec)
-                img = misc.imresize(np.asarray(img), conv_model_spec[1])
-                batch_seq.append(np.asarray(img))
+                img_normalized = self.normalize_input(img, conv_model_spec)
+                img_resized = misc.imresize(np.asarray(img_normalized), conv_model_spec[1])
+                batch_seq.append(np.asarray(img_resized))
         return batch_seq
 
     def dumpValidation(self,x1,x2,y,shuffled_index,dev_idx,i):

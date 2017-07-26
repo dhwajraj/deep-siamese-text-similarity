@@ -59,10 +59,9 @@ batches=inpH.batch_iter(
 
 for nn in xrange(1):
     x1_batch, x2_batch, y_batch = batches.next()
-    print(x1_batch, type(x1_batch))
-    print(x1_batch.shape)
-"""
+    print(x1_batch.shape, x2_batch.shape, y_batch.shape)
 
+"""
 # Training
 # ==================================================
 print("starting graph def")
@@ -204,10 +203,6 @@ with tf.Graph().as_default():
     max_validation_acc=0.0
     for nn in xrange(sum_no_of_batches*FLAGS.num_epochs):
         x1_batch,x2_batch, y_batch = batches.next()
-        #batch = batches.next()
-        #if len(batch)<1:
-        #    continue
-        #x1_batch,x2_batch, y_batch = zip(*batch)
         if len(y_batch)<1:
             continue
         train_step(x1_batch, x2_batch, y_batch)
@@ -217,10 +212,6 @@ with tf.Graph().as_default():
             print("\nEvaluation:")
             dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, convModel.spec, 1)
             for x1_dev_b,x2_dev_b,y_dev_b in dev_batches:
-            #for db in dev_batches:
-                #if len(db)<1:
-                #    continue
-                #x1_dev_b,x2_dev_b,y_dev_b = zip(*db)
                 if len(y_dev_b)<1:
                     continue
                 acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)

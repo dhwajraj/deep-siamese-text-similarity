@@ -75,8 +75,8 @@ class SiameseLSTM(object):
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
-        self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", embedding_size, sequence_length)
-        self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", embedding_size, sequence_length)
+        self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", input_size, sequence_length)
+        self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", input_size, sequence_length)
         self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.out1,self.out2)),1,keep_dims=True))
         self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
         self.distance = tf.reshape(self.distance, [-1], name="distance")
