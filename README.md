@@ -1,3 +1,4 @@
+# This code is currently being modified for sequence of images (later for videos)
 # Deep LSTM siamese network for text similarity
 
 It is a tensorflow based implementation of deep siamese LSTM network to capture phrase/sentence similarity using character embeddings.

@@ -52,11 +52,11 @@ class SiameseLSTM(object):
         return tf.reduce_sum(tmp +tmp2)/batch_size/2
     
     def __init__(
-      self, sequence_length, vocab_size, embedding_size, hidden_units, l2_reg_lambda, batch_size):
+      self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size):
 
       # Placeholders for input, output and dropout
-      self.input_x1 = tf.placeholder(tf.int32, [None, sequence_length], name="input_x1")
-      self.input_x2 = tf.placeholder(tf.int32, [None, sequence_length], name="input_x2")
+      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1")
+      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2")
       self.input_y = tf.placeholder(tf.float32, [None], name="input_y")
       self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
@@ -64,19 +64,19 @@ class SiameseLSTM(object):
       l2_loss = tf.constant(0.0, name="l2_loss")
           
       # Embedding layer
-      with tf.name_scope("embedding"):
+      """with tf.name_scope("embedding"):
           self.W = tf.Variable(
-              tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
+              tf.random_uniform([input_size, embedding_size], -1.0, 1.0),
               trainable=True,name="W")
           self.embedded_chars1 = tf.nn.embedding_lookup(self.W, self.input_x1)
           #self.embedded_chars_expanded1 = tf.expand_dims(self.embedded_chars1, -1)
           self.embedded_chars2 = tf.nn.embedding_lookup(self.W, self.input_x2)
-          #self.embedded_chars_expanded2 = tf.expand_dims(self.embedded_chars2, -1)
+          #self.embedded_chars_expanded2 = tf.expand_dims(self.embedded_chars2, -1)"""
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
-        self.out1=self.BiRNN(self.embedded_chars1, self.dropout_keep_prob, "side1", embedding_size, sequence_length)
-        self.out2=self.BiRNN(self.embedded_chars2, self.dropout_keep_prob, "side2", embedding_size, sequence_length)
+        self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", embedding_size, sequence_length)
+        self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", embedding_size, sequence_length)
         self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.out1,self.out2)),1,keep_dims=True))
         self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
         self.distance = tf.reshape(self.distance, [-1], name="distance")
