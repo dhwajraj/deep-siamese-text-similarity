@@ -10,8 +10,11 @@ class SiameseLSTM(object):
     def BiRNN(self, x, dropout, scope, embedding_size, sequence_length):
         n_input=embedding_size
         n_steps=sequence_length
-        n_hidden=n_steps
-        n_layers=3
+        #n_hidden layer_ number of features
+        n_hidden=10
+        #num-layers of lstm n_layers=2 => input(t)-> lstm(1)->lstm(2)->output(t)
+        n_layers=1
+        
         # Prepare data shape to match `bidirectional_rnn` function requirements
         # Current data input shape: (batch_size, n_steps, n_input) (?, seq_len, embedding_size)
         # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
@@ -22,7 +25,7 @@ class SiameseLSTM(object):
         # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
         #x = tf.split(0, n_steps, x)
         x = tf.split(x, n_steps, axis = 0)
-        print(x)
+
         # Define lstm cells with tensorflow
         # Forward direction cell
         with tf.name_scope("fw"+scope),tf.variable_scope("fw"+scope):
@@ -77,9 +80,9 @@ class SiameseLSTM(object):
       with tf.name_scope("output"):
         self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", input_size, sequence_length)
         self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", input_size, sequence_length)
-        self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.out1,self.out2)),1,keep_dims=True))
-        self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
+        self.distance = tf.reduce_sum(tf.abs(tf.subtract(self.out1,self.out2)),1,keep_dims=True)
         self.distance = tf.reshape(self.distance, [-1], name="distance")
+
       with tf.name_scope("loss"):
           self.loss = self.contrastive_loss(self.input_y,self.distance, batch_size) 
       with tf.name_scope("accuracy"):

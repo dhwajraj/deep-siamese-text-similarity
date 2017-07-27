@@ -17,8 +17,6 @@ class InputHelper(object):
     def getfilenames(self, line, base_filepath, mapping_dict, max_document_length):
         temp = []
         line = line.strip().split(" ")
-        #if(mapping_dict[line[0]] == 'intersect1_side1_right'):
-        #    print(line)
 
         # Store paths of all images in the sequence
         for i in range(1, len(line), 1):
@@ -28,8 +26,7 @@ class InputHelper(object):
         #append-black images if the seq length is less than 20
         while len(temp) < max_document_length:
             temp.append(base_filepath + 'black_image.jpg')
-        #if(mapping_dict[line[0]] == 'intersect1_side1_right'):
-        #    print(temp)
+
         return temp
 
 
@@ -44,14 +41,14 @@ class InputHelper(object):
         print(base_filepath+'mapping_file')
         for line_no,line in enumerate(open(base_filepath + 'mapping_file')):
             mapping_dict['F' + str(line_no+1)] = line.strip()
-        #print(mapping_dict)
 
         # Loading Positive sample file
         l = []
-        for line in open(base_filepath + 'positive_annotations'):
+        for line in open(base_filepath + 'positive_annotations.txt'):
             if (line[0] == 'F'):
+                if ('/' in line):
+                    line = line.split("/")[0]
                 l.append(line.strip())
-
         # positive samples from file
         num_positive_samples = len(l)
         for i in range(0,num_positive_samples,2):
@@ -64,15 +61,24 @@ class InputHelper(object):
 
             y.append(1)#np.array([0,1]))
 
-        # generate random negative samples
-        #combined = np.asarray(x1+x2)
-        #shuffle_indices = np.random.permutation(np.arange(len(combined)))
-        #combined_shuff = combined[shuffle_indices]
-        #for i in xrange(len(combined)):
-        #    x1.append(combined[i])
-        #    x2.append(combined_shuff[i])
-        #    y.append(0) #np.array([1,0]))
+        l = []
+        for line in open(base_filepath + 'negative_annotations.txt'):
+            line=line.split('/', 1)[0]
+            if (len(line) > 0  and  line[0] == 'F'):
+                l.append(line.strip())
+        
+        # positive samples from file
+        num_positive_samples = len(l)
+        for i in range(0,num_positive_samples,2):
+            if random() > 0.5:
+                x1.append(self.getfilenames(l[i], base_filepath, mapping_dict, max_document_length))
+                x2.append(self.getfilenames(l[i+1], base_filepath, mapping_dict, max_document_length))
+            else:
+                x1.append(self.getfilenames(l[i+1], base_filepath, mapping_dict, max_document_length))
+                x2.append(self.getfilenames(l[i], base_filepath, mapping_dict, max_document_length))
 
+            y.append(0)#np.array([0,1]))
+        
         return np.asarray(x1),np.asarray(x2),np.asarray(y)
 
 
@@ -89,8 +95,9 @@ class InputHelper(object):
 
         # Loading Positive sample file
         l = []
-        for line in open(base_filepath + 'positive_annotations'):
-            if (line[0] == 'F'):
+        for line in open(base_filepath + 'positive_annotations.txt'):
+            line=line.split('/', 1)[0]
+            if (len(line) > 0  and line[0] == 'F'):
                 l.append(line.strip())
 
         # positive samples from file

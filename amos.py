@@ -100,6 +100,5 @@ class Conv(object):
         self.spec = [mean, scale_size]
         
         self.model()
-        self.features = tf.reshape(self.net_layers[layer], [-1, self.max_frames, 6*6*256])
-        print(self.features)
+        self.features = tf.reshape(self.net_layers[layer], [-1, self.max_frames, tf.reduce_prod(self.net_layers[layer].get_shape()[1:])])
         
