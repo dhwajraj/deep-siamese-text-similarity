@@ -24,10 +24,10 @@ tf.flags.DEFINE_integer("hidden_units", 100, "Number of hidden units in softmax 
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 10, "Batch Size (default: 10)")
+tf.flags.DEFINE_integer("batch_size", 2, "Batch Size (default: 10)")
 tf.flags.DEFINE_integer("num_epochs", 100, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 1, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 1, "Save model after this many steps (default: 100)")
+tf.flags.DEFINE_integer("evaluate_every", 100, "Evaluate model on dev set after this many steps (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -57,10 +57,11 @@ train_set, dev_set, sum_no_of_batches = inpH.getDataSets(FLAGS.training_file_pat
 # ==================================================
 print("starting graph def")
 with tf.Graph().as_default():
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.6)
     session_conf = tf.ConfigProto(
       allow_soft_placement=FLAGS.allow_soft_placement,
       log_device_placement=FLAGS.log_device_placement,
-      #gpu_options.per_process_gpu_memory_fraction=0.4,
+      gpu_options=gpu_options,
       )
     sess = tf.Session(config=session_conf)
     print("started session")
