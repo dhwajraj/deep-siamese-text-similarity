@@ -25,9 +25,9 @@ tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)
 
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 10, "Batch Size (default: 10)")
-tf.flags.DEFINE_integer("num_epochs", 300, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 1000, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 1000, "Save model after this many steps (default: 100)")
+tf.flags.DEFINE_integer("num_epochs", 100, "Number of training epochs (default: 200)")
+tf.flags.DEFINE_integer("evaluate_every", 1, "Evaluate model on dev set after this many steps (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 1, "Save model after this many steps (default: 100)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -52,16 +52,7 @@ if FLAGS.training_file_path==None:
 inpH = InputHelper()
 train_set, dev_set, sum_no_of_batches = inpH.getDataSets(FLAGS.training_file_path, FLAGS.max_frames, 10, FLAGS.batch_size)
 
-"""
-spec = [[100,100,100], (256,256)]
-batches=inpH.batch_iter(
-                train_set[0], train_set[1], train_set[2], FLAGS.batch_size, FLAGS.num_epochs, spec)
 
-for nn in xrange(1):
-    x1_batch, x2_batch, y_batch = batches.next()
-    print(x1_batch.shape, x2_batch.shape, y_batch.shape)
-
-"""
 # Training
 # ==================================================
 print("starting graph def")
@@ -136,8 +127,8 @@ with tf.Graph().as_default():
         
         #A single training step
         
-        [x1_batch] = sess.run([convModel.features],  feed_dict={convModel.input: x1_batch})
-        [x2_batch] = sess.run([convModel.features],  feed_dict={convModel.input: x2_batch})
+        [x1_batch] = sess.run([convModel.features],  feed_dict={convModel.input_imgs: x1_batch})
+        [x2_batch] = sess.run([convModel.features],  feed_dict={convModel.input_imgs: x2_batch})
 
         if random()>0.5:
             feed_dict = {
@@ -166,8 +157,8 @@ with tf.Graph().as_default():
         
         #A single training step
         
-        [x1_batch] = sess.run([convModel.features],  feed_dict={convModel: x1_batch})
-        [x2_batch] = sess.run([convModel.features],  feed_dict={convModel: x2_batch})
+        [x1_batch] = sess.run([convModel.features],  feed_dict={convModel.input_imgs: x1_batch})
+        [x2_batch] = sess.run([convModel.features],  feed_dict={convModel.input_imgs: x2_batch})
 
         if random()>0.5:
             feed_dict = {
@@ -183,7 +174,7 @@ with tf.Graph().as_default():
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        step, loss, accuracy, dist = sess.run([global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
+        step, loss, dist = sess.run([global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
         d[d>=0.5]=1
@@ -208,8 +199,8 @@ with tf.Graph().as_default():
         sum_acc=0.0
         if current_step % FLAGS.evaluate_every == 0:
             print("\nEvaluation:")
-            dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, convModel.spec, 1)
-            for x1_dev_b,x2_dev_b,y_dev_b in dev_batches:
+            dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
+            for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
                 if len(y_dev_b)<1:
                     continue
                 acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)

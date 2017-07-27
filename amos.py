@@ -54,13 +54,13 @@ class Conv(object):
     def model(self):    
 
         #placeholder for a random set of 20 images of fixed size -- 256,256
-        self.input = tf.placeholder(tf.float32, shape = [None, 256, 256, 3])
-        sliced_input = tf.slice(self.input, begin=[ 0, 14, 14, 0], size=[ -1, 227, 227, -1])
+        self.input_imgs = tf.placeholder(tf.float32, shape = [None, 227, 227, 3], name = "input_imgs")
+        #sliced_input = tf.slice(self.input_imgs, begin=[ 0, 14, 14, 0], size=[ -1, 227, 227, -1])
         
 
         # Conv-Layers
         net_layers={}
-        net_layers['conv1'] = self.conv(sliced_input, 11, 3, 96, name= 'conv1', strides=[1,4,4,1] ,padding='VALID', groups=1)
+        net_layers['conv1'] = self.conv(self.input_imgs, 11, 3, 96, name= 'conv1', strides=[1,4,4,1] ,padding='VALID', groups=1)
         net_layers['pool1'] = self.pool(net_layers['conv1'], padding='VALID', name='pool1')
         net_layers['lrn1']  = tf.nn.lrn(net_layers['pool1'], depth_radius=2, alpha=2e-5, beta=0.75,name='norm1')
 
@@ -95,10 +95,11 @@ class Conv(object):
         self.weight_path = weight_path
 
         mean = [104, 114, 124]
-        scale_size = (256,256)
+        scale_size = (227,227)
 
         self.spec = [mean, scale_size]
         
         self.model()
-        self.features = tf.reshape(self.net_layers[layer], [-1, self.max_frames, tf.reduce_prod(self.net_layers[layer].get_shape()[1:])])
+        with tf.name_scope("conv"):
+            self.features = tf.reshape(self.net_layers[layer], [-1, self.max_frames, tf.reduce_prod(self.net_layers[layer].get_shape()[1:])] , name="output")
         

@@ -11,7 +11,7 @@ class SiameseLSTM(object):
         n_input=embedding_size
         n_steps=sequence_length
         #n_hidden layer_ number of features
-        n_hidden=10
+        n_hidden=20
         #num-layers of lstm n_layers=2 => input(t)-> lstm(1)->lstm(2)->output(t)
         n_layers=1
         
@@ -47,8 +47,6 @@ class SiameseLSTM(object):
             #         except Exception: # Old TensorFlow version only returns outputs not states
             #             outputs = tf.nn.bidirectional_rnn(lstm_fw_cell_m, lstm_bw_cell_m, x,
             #                                             dtype=tf.float32)
-        print(outputs)
-        print(outputs[-1])
         return outputs[-1]
     
     def contrastive_loss(self, y,d,batch_size):
