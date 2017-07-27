@@ -29,16 +29,17 @@ class SiameseLSTM(object):
         # Define lstm cells with tensorflow
         # Forward direction cell
         with tf.name_scope("fw"+scope),tf.variable_scope("fw"+scope):
-            print(tf.get_variable_scope().name)
+            #print(tf.get_variable_scope().name)
             fw_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
             lstm_fw_cell = tf.contrib.rnn.DropoutWrapper(fw_cell,output_keep_prob=dropout)
             lstm_fw_cell_m=tf.contrib.rnn.MultiRNNCell([lstm_fw_cell]*n_layers, state_is_tuple=True)
         # Backward direction cell
         with tf.name_scope("bw"+scope),tf.variable_scope("bw"+scope):
-            print(tf.get_variable_scope().name)
+            #print(tf.get_variable_scope().name)
             bw_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
             lstm_bw_cell = tf.contrib.rnn.DropoutWrapper(bw_cell,output_keep_prob=dropout)
             lstm_bw_cell_m = tf.contrib.rnn.MultiRNNCell([lstm_bw_cell]*n_layers, state_is_tuple=True)
+        
         # Get lstm cell output
         #try:
         with tf.name_scope("bw"+scope),tf.variable_scope("bw"+scope):
@@ -46,6 +47,8 @@ class SiameseLSTM(object):
             #         except Exception: # Old TensorFlow version only returns outputs not states
             #             outputs = tf.nn.bidirectional_rnn(lstm_fw_cell_m, lstm_bw_cell_m, x,
             #                                             dtype=tf.float32)
+        print(outputs)
+        print(outputs[-1])
         return outputs[-1]
     
     def contrastive_loss(self, y,d,batch_size):
@@ -65,27 +68,15 @@ class SiameseLSTM(object):
 
       # Keeping track of l2 regularization loss (optional)
       l2_loss = tf.constant(0.0, name="l2_loss")
-          
-      # Embedding layer
-      """with tf.name_scope("embedding"):
-          self.W = tf.Variable(
-              tf.random_uniform([input_size, embedding_size], -1.0, 1.0),
-              trainable=True,name="W")
-          self.embedded_chars1 = tf.nn.embedding_lookup(self.W, self.input_x1)
-          #self.embedded_chars_expanded1 = tf.expand_dims(self.embedded_chars1, -1)
-          self.embedded_chars2 = tf.nn.embedding_lookup(self.W, self.input_x2)
-          #self.embedded_chars_expanded2 = tf.expand_dims(self.embedded_chars2, -1)"""
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
         self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", input_size, sequence_length)
         self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", input_size, sequence_length)
         self.distance = tf.reduce_sum(tf.abs(tf.subtract(self.out1,self.out2)),1,keep_dims=True)
-        self.distance = tf.reshape(self.distance, [-1], name="distance")
+        self.distance = tf.reshape(self.distance, [-1])
+        self.distance = tf.exp(-self.distance, name="distance")
 
       with tf.name_scope("loss"):
-          self.loss = self.contrastive_loss(self.input_y,self.distance, batch_size) 
-      with tf.name_scope("accuracy"):
-          correct_predictions = tf.equal(self.distance, self.input_y)
-          self.accuracy=tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
+          self.loss = tf.losses.mean_squared_error(self.input_y, self.distance)/batch_size 
      

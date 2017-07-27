@@ -153,12 +153,11 @@ with tf.Graph().as_default():
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        _, step, loss, accuracy, dist = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
+        _, step, loss, dist = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
-        d[d>=0.5]=999.0
-        d[d<0.5]=1
-        d[d>1.0]=0
+        d[d>=0.5]=1
+        d[d<0.5]=0
         accuracy = np.mean(y_batch==d)
         print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         print(y_batch, dist, d)
@@ -184,12 +183,11 @@ with tf.Graph().as_default():
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        step, loss, accuracy, dist = sess.run([global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
+        step, loss, accuracy, dist = sess.run([global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
-        d[d>=0.5]=999.0
-        d[d<0.5]=1
-        d[d>1.0]=0
+        d[d>=0.5]=1
+        d[d<0.5]=0
         accuracy = np.mean(y_batch==d)
         print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         print(y_batch, dist, d)
