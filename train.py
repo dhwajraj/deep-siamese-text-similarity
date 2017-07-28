@@ -34,7 +34,7 @@ tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on 
 
 #Conv Net Parameters
 tf.flags.DEFINE_string("conv_layer", "pool6", "CNN features from AMOSNet(default: pool6)")
-tf.flags.DEFINE_string("conv_layer_weight_pretrained_path", "./AmosNetWeights.npy", "AMOSNet pre-trained weights path")
+tf.flags.DEFINE_string("conv_layer_weight_pretrained_path", "/data4/abhijeet/AmosNetWeights.npy", "AMOSNet pre-trained weights path")
 
 
 FLAGS = tf.flags.FLAGS
@@ -56,7 +56,7 @@ train_set, dev_set, sum_no_of_batches = inpH.getDataSets(FLAGS.training_file_pat
 # ==================================================
 print("starting graph def")
 with tf.Graph().as_default():
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.49)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.72)
     session_conf = tf.ConfigProto(
       allow_soft_placement=FLAGS.allow_soft_placement,
       log_device_placement=FLAGS.log_device_placement,
@@ -100,7 +100,7 @@ with tf.Graph().as_default():
     print("defined gradient summaries")
     # Output directory for models and summaries
     timestamp = str(int(time.time()))
-    out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
+    out_dir = os.path.abspath(os.path.join("/data4/abhijeet/", "runs", timestamp))
     print("Writing to {}\n".format(out_dir))
 
     # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it

@@ -13,7 +13,7 @@ from helper import InputHelper
 # Eval Parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
 tf.flags.DEFINE_string("checkpoint_dir", "", "Checkpoint directory from training run")
-tf.flags.DEFINE_string("model", "runs/1501181274/checkpoints/model-1", "Load trained model checkpoint (Default: None)")
+tf.flags.DEFINE_string("model", "/data4/abhijeet/runs/1501247621/checkpoints/model-400", "Load trained model checkpoint (Default: None)")
 tf.flags.DEFINE_string("eval_filepath", "/home/halwai/gta_data/final/", "testing folder (default: /home/halwai/gta_data/final)")
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
