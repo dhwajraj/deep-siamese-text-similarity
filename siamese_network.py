@@ -11,7 +11,7 @@ class SiameseLSTM(object):
         n_input=embedding_size
         n_steps=sequence_length
         #n_hidden layer_ number of features
-        n_hidden=20
+        n_hidden=21
         #num-layers of lstm n_layers=2 => input(t)-> lstm(1)->lstm(2)->output(t)
         n_layers=1
         
