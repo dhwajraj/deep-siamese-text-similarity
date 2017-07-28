@@ -18,23 +18,24 @@ from amos import Conv
 tf.flags.DEFINE_integer("embedding_dim", 300, "Dimensionality of character embedding (default: 300)")
 tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
-tf.flags.DEFINE_string("training_file_path", "/data4/abhijeet/final/", "training folder (default: /home/halwai/gta_data/final)")
+tf.flags.DEFINE_string("training_file_path", "/data4/abhijeet/gta/final/", "training folder (default: /home/halwai/gta_data/final)")
 tf.flags.DEFINE_integer("hidden_units", 100, "Number of hidden units in softmax regression layer (default:50)")
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 8, "Batch Size (default: 10)")
 tf.flags.DEFINE_integer("num_epochs", 100, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 100, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (default: 100)")
+tf.flags.DEFINE_integer("evaluate_every", 1, "Evaluate model on dev set after this many epochs (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 1, "Save model after this many epochs (default: 100)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", False, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+tf.flags.DEFINE_string("summaries_dir", "/data4/abhijeet/gta/summaries/", "Summary storage")
 
 #Conv Net Parameters
 tf.flags.DEFINE_string("conv_layer", "pool6", "CNN features from AMOSNet(default: pool6)")
-tf.flags.DEFINE_string("conv_layer_weight_pretrained_path", "/data4/abhijeet/AmosNetWeights.npy", "AMOSNet pre-trained weights path")
+tf.flags.DEFINE_string("conv_layer_weight_pretrained_path", "/data4/abhijeet/gta/AmosNetWeights.npy", "AMOSNet pre-trained weights path")
 
 
 FLAGS = tf.flags.FLAGS
@@ -56,7 +57,7 @@ train_set, dev_set, sum_no_of_batches = inpH.getDataSets(FLAGS.training_file_pat
 # ==================================================
 print("starting graph def")
 with tf.Graph().as_default():
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.72)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.52)
     session_conf = tf.ConfigProto(
       allow_soft_placement=FLAGS.allow_soft_placement,
       log_device_placement=FLAGS.log_device_placement,
@@ -96,11 +97,12 @@ with tf.Graph().as_default():
             sparsity_summary = tf.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
             grad_summaries.append(grad_hist_summary)
             grad_summaries.append(sparsity_summary)
-    grad_summaries_merged = tf.summary.merge(grad_summaries)
+    #grad_summaries_merged = tf.summary.merge(grad_summaries)
+    summaries_merged = tf.summary.merge_all()
     print("defined gradient summaries")
     # Output directory for models and summaries
     timestamp = str(int(time.time()))
-    out_dir = os.path.abspath(os.path.join("/data4/abhijeet/", "runs", timestamp))
+    out_dir = os.path.abspath(os.path.join("/data4/abhijeet/gta/", "runs", timestamp))
     print("Writing to {}\n".format(out_dir))
 
     # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
@@ -108,7 +110,7 @@ with tf.Graph().as_default():
     checkpoint_prefix = os.path.join(checkpoint_dir, "model")
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=2)
 
     # Initialize all variables
     sess.run(tf.global_variables_initializer())
@@ -123,6 +125,9 @@ with tf.Graph().as_default():
         f.write(graphpb_txt)
 
 
+    train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train', graph=tf.get_default_graph())
+    test_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/test' , graph=tf.get_default_graph())
+    
     def train_step(x1_batch, x2_batch, y_batch):
         
         #A single training step
@@ -144,7 +149,7 @@ with tf.Graph().as_default():
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        _, step, loss, dist = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
+        _, step, loss, dist, summary = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
         d[d>=0.5]=1
@@ -152,6 +157,7 @@ with tf.Graph().as_default():
         accuracy = np.mean(y_batch==d)
         print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         #print(y_batch, dist, d)
+        return summary
 
     def dev_step(x1_batch, x2_batch, y_batch):
         
@@ -174,7 +180,7 @@ with tf.Graph().as_default():
                              siameseModel.input_y: y_batch,
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        step, loss, dist = sess.run([global_step, siameseModel.loss, siameseModel.distance],  feed_dict)
+        step, loss, dist, summary = sess.run([global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
         d[d>=0.5]=1
@@ -182,7 +188,7 @@ with tf.Graph().as_default():
         accuracy = np.mean(y_batch==d)
         print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         #print(y_batch, dist, d)
-        return accuracy
+        return summary, accuracy
 
     # Generate batches
     batches=inpH.batch_iter(
@@ -194,19 +200,21 @@ with tf.Graph().as_default():
         x1_batch,x2_batch, y_batch = batches.next()
         if len(y_batch)<1:
             continue
-        train_step(x1_batch, x2_batch, y_batch)
+        summary =train_step(x1_batch, x2_batch, y_batch)
         current_step = tf.train.global_step(sess, global_step)
+        train_writer.add_summary(summary, current_step)
         sum_acc=0.0
-        if current_step % FLAGS.evaluate_every == 0:
+        if current_step % (FLAGS.evaluate_every*FLAGS.num_epochs) == 0:
             print("\nEvaluation:")
             dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
             for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
                 if len(y_dev_b)<1:
                     continue
-                acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
+                summary , acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
                 sum_acc = sum_acc + acc
+                test_writer.add_summary(summary, current_step)
         print("")
-        if current_step % FLAGS.checkpoint_every == 0:
+        if current_step % (FLAGS.checkpoint_every*FLAGS.num_epochs) == 0:
             if sum_acc >= max_validation_acc:
                 max_validation_acc = sum_acc
                 saver.save(sess, checkpoint_prefix, global_step=current_step)

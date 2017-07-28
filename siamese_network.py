@@ -76,5 +76,7 @@ class SiameseLSTM(object):
         self.distance = tf.exp(-self.distance, name="distance")
 
       with tf.name_scope("loss"):
-          self.loss = tf.losses.mean_squared_error(self.input_y, self.distance)/batch_size 
+          self.loss = tf.losses.mean_squared_error(self.input_y, self.distance)/batch_size
+          #self.loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input.y, logits=self.distance)/batch_size
+      tf.summary.scalar('loss', self.loss) 
      

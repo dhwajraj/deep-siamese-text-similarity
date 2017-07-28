@@ -2,3 +2,4 @@ AmosNetWeights.npy
 *.pyc
 runs/
 final_run
+slurm*

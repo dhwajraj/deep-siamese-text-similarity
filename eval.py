@@ -13,8 +13,8 @@ from helper import InputHelper
 # Eval Parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
 tf.flags.DEFINE_string("checkpoint_dir", "", "Checkpoint directory from training run")
-tf.flags.DEFINE_string("model", "/data4/abhijeet/runs/1501247621/checkpoints/model-400", "Load trained model checkpoint (Default: None)")
-tf.flags.DEFINE_string("eval_filepath", "/home/halwai/gta_data/final/", "testing folder (default: /home/halwai/gta_data/final)")
+tf.flags.DEFINE_string("model", "/data4/abhijeet/runs/1501247261/checkpoints/model-300", "Load trained model checkpoint (Default: None)")
+tf.flags.DEFINE_string("eval_filepath", "/data4/abhijeet/final/", "testing folder (default: /home/halwai/gta_data/final)")
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
 # Misc Parameters
@@ -72,6 +72,7 @@ with graph.as_default():
         all_predictions = []
         all_d=[]
         for (x1_dev_b,x2_dev_b,y_dev_b) in batches:
+            print(x1_dev_b)
             [x1] = sess.run([conv_output], {input_imgs: x1_dev_b})
             [x2] = sess.run([conv_output], {input_imgs: x2_dev_b})
             [batch_predictions] = sess.run([predictions], {input_x1: x1, input_x2: x2, input_y:y_dev_b, dropout_keep_prob: 1.0})
