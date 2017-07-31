@@ -16,7 +16,7 @@ from random import random
 # ==================================================
 
 tf.flags.DEFINE_integer("embedding_dim", 100, "Dimensionality of character embedding (default: 300)")
-tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
+tf.flags.DEFINE_float("dropout_keep_prob", 1.0, "Dropout keep probability (default: 1.0)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
 tf.flags.DEFINE_string("training_files", "person_match.train2", "training file (default: None)")
 tf.flags.DEFINE_integer("hidden_units", 50, "Number of hidden units in softmax regression layer (default:50)")
@@ -75,11 +75,11 @@ with tf.Graph().as_default():
     grad_summaries = []
     for g, v in grads_and_vars:
         if g is not None:
-            grad_hist_summary = tf.histogram_summary("{}/grad/hist".format(v.name), g)
-            sparsity_summary = tf.scalar_summary("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
+            grad_hist_summary = tf.summary.histogram("{}/grad/hist".format(v.name), g)
+            sparsity_summary = tf.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
             grad_summaries.append(grad_hist_summary)
             grad_summaries.append(sparsity_summary)
-    grad_summaries_merged = tf.merge_summary(grad_summaries)
+    grad_summaries_merged = tf.summary.merge(grad_summaries)
     print("defined gradient summaries")
     # Output directory for models and summaries
     timestamp = str(int(time.time()))
@@ -91,13 +91,13 @@ with tf.Graph().as_default():
     checkpoint_prefix = os.path.join(checkpoint_dir, "model")
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    saver = tf.train.Saver(tf.all_variables(), max_to_keep=100)
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
 
     # Write vocabulary
     vocab_processor.save(os.path.join(checkpoint_dir, "vocab"))
 
     # Initialize all variables
-    sess.run(tf.initialize_all_variables())
+    sess.run(tf.global_variables_initializer())
     
     print("init all variables")
     graph_def = tf.get_default_graph().as_graph_def()
@@ -112,27 +112,27 @@ with tf.Graph().as_default():
         """
         if random()>0.5:
             feed_dict = {
-                             siameseModel.input_x1: x1_batch,
-                             siameseModel.input_x2: x2_batch,
-                             siameseModel.input_y: y_batch,
-                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+                siameseModel.input_x1: x1_batch,
+                siameseModel.input_x2: x2_batch,
+                siameseModel.input_y: y_batch,
+                siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
         else:
             feed_dict = {
-                             siameseModel.input_x1: x2_batch,
-                             siameseModel.input_x2: x1_batch,
-                             siameseModel.input_y: y_batch,
-                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+                siameseModel.input_x1: x2_batch,
+                siameseModel.input_x2: x1_batch,
+                siameseModel.input_y: y_batch,
+                siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        _, step, loss, accuracy, dist = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
+        _, step, loss, accuracy, dist, sim = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance, siameseModel.temp_sim],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
-        d = np.copy(dist)
-        d[d>=0.5]=999.0
-        d[d<0.5]=1
-        d[d>1.0]=0
-        accuracy = np.mean(y_batch==d)
+        # d = np.copy(dist)
+        # d[d>=0.5]=999.0
+        # d[d<0.5]=1
+        # d[d>1.0]=0
+        # accuracy = np.mean(y_batch==d)
         print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-        print y_batch, dist, d
+        print y_batch, dist, sim
 
     def dev_step(x1_batch, x2_batch, y_batch):
         """
@@ -140,27 +140,27 @@ with tf.Graph().as_default():
         """ 
         if random()>0.5:
             feed_dict = {
-                             siameseModel.input_x1: x1_batch,
-                             siameseModel.input_x2: x2_batch,
-                             siameseModel.input_y: y_batch,
-                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+                siameseModel.input_x1: x1_batch,
+                siameseModel.input_x2: x2_batch,
+                siameseModel.input_y: y_batch,
+                siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
         else:
             feed_dict = {
-                             siameseModel.input_x1: x2_batch,
-                             siameseModel.input_x2: x1_batch,
-                             siameseModel.input_y: y_batch,
-                             siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
+                siameseModel.input_x1: x2_batch,
+                siameseModel.input_x2: x1_batch,
+                siameseModel.input_y: y_batch,
+                siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
-        step, loss, accuracy, dist = sess.run([global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.distance],  feed_dict)
+        step, loss, accuracy, sim = sess.run([global_step, siameseModel.loss, siameseModel.accuracy, siameseModel.temp_sim],  feed_dict)
         time_str = datetime.datetime.now().isoformat()
-        d = np.copy(dist)
-        d[d>=0.5]=999.0
-        d[d<0.5]=1
-        d[d>1.0]=0
-        accuracy = np.mean(y_batch==d)
+        # d = np.copy(dist)
+        # d[d>=0.5]=999.0
+        # d[d<0.5]=1
+        # d[d>1.0]=0
+        # accuracy = np.mean(y_batch==d)
         print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-        print y_batch, dist, d
+        print y_batch, sim
         return accuracy
 
     # Generate batches
@@ -190,7 +190,7 @@ with tf.Graph().as_default():
                     continue
                 acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
                 sum_acc = sum_acc + acc
-        	print("")
+            print("")
         if current_step % FLAGS.checkpoint_every == 0:
             if sum_acc >= max_validation_acc:
                 max_validation_acc = sum_acc
