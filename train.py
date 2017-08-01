@@ -57,7 +57,7 @@ train_set, dev_set, sum_no_of_batches = inpH.getDataSets(FLAGS.training_file_pat
 # ==================================================
 print("starting graph def")
 with tf.Graph().as_default():
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.52)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
     session_conf = tf.ConfigProto(
       allow_soft_placement=FLAGS.allow_soft_placement,
       log_device_placement=FLAGS.log_device_placement,
@@ -154,8 +154,8 @@ with tf.Graph().as_default():
         d = np.copy(dist)
         d[d>=0.5]=1
         d[d<0.5]=0
-        accuracy = np.mean(y_batch==d)
-        print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+        correct = np.sum(y_batch==d)
+        print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
         return summary
 
@@ -185,17 +185,17 @@ with tf.Graph().as_default():
         d = np.copy(dist)
         d[d>=0.5]=1
         d[d<0.5]=0
-        accuracy = np.mean(y_batch==d)
-        print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+        correct = np.sum(y_batch==d)
+        print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
-        return summary, accuracy
+        return summary, correct
 
     # Generate batches
     batches=inpH.batch_iter(
                 train_set[0], train_set[1], train_set[2], FLAGS.batch_size, FLAGS.num_epochs, convModel.spec)
 
     ptr=0
-    max_validation_acc=0.0
+    max_validation_correct=0.0
     for nn in xrange(sum_no_of_batches*FLAGS.num_epochs):
         x1_batch,x2_batch, y_batch = batches.next()
         if len(y_batch)<1:
@@ -203,21 +203,21 @@ with tf.Graph().as_default():
         summary =train_step(x1_batch, x2_batch, y_batch)
         current_step = tf.train.global_step(sess, global_step)
         train_writer.add_summary(summary, current_step)
-        sum_acc=0.0
+        sum_correct=0.0
         if current_step % (FLAGS.evaluate_every*FLAGS.num_epochs) == 0:
             print("\nEvaluation:")
             dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
             for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
                 if len(y_dev_b)<1:
                     continue
-                summary , acc = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
-                sum_acc = sum_acc + acc
+                summary , correct = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
+                sum_correct = sum_correct + correct
                 test_writer.add_summary(summary, current_step)
-        print("")
-        if current_step % (FLAGS.checkpoint_every*FLAGS.num_epochs) == 0:
-            if sum_acc >= max_validation_acc:
-                max_validation_acc = sum_acc
+            print("sum_correct={}/total_correct={} \n".format(sum_correct, len(dev_set[2])))
+        if current_step % (FLAGS.evaluate_every*FLAGS.num_epochs) == 0:
+            if sum_correct >= max_validation_correct:
+                max_validation_correct = sum_correct
                 saver.save(sess, checkpoint_prefix, global_step=current_step)
                 tf.train.write_graph(sess.graph.as_graph_def(), checkpoint_prefix, "graph"+str(nn)+".pb", as_text=False)
-                print("Saved model {} with sum_accuracy={} checkpoint to {}\n".format(nn, max_validation_acc, checkpoint_prefix))
+                print("Saved model {} with checkpoint to {}\n".format(nn, checkpoint_prefix))
 #"""
