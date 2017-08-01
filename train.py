@@ -244,7 +244,7 @@ with tf.Graph().as_default():
         val_loss.append(val_epoch_loss)
     
         # Update stored model
-        if current_step % (FLAGS.evaluate_every) == 0:
+        if current_step % (FLAGS.checkpoint_every) == 0:
             if sum_val_correct >= max_validation_correct:
                 max_validation_correct = sum_val_correct
                 saver.save(sess, checkpoint_prefix, global_step=current_step)
