@@ -212,26 +212,26 @@ with tf.Graph().as_default():
             train_writer.add_summary(summary, current_step)
         print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
             
-            # Evaluate on Validataion Data
-            sum_val_correct=0.0
-            if current_step % (FLAGS.evaluate_every) == 0:
-                print("\nEvaluation:")
-                dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
-                for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
-                    if len(y_dev_b)<1:
-                        continue
-                    summary , batch_val_correct = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
-                    sum_val_correct = sum_val_correct + batch_val_correct
-                    test_writer.add_summary(summary, current_step)
-                print("total_val_correct={}/total_val={} \n".format(sum_val_correct, len(dev_set[2])))
-            
-            # Update stored model
-            if current_step % (FLAGS.evaluate_every) == 0:
-                if sum_val_correct >= max_validation_correct:
-                    max_validation_correct = sum_val_correct
-                    saver.save(sess, checkpoint_prefix, global_step=current_step)
-                    tf.train.write_graph(sess.graph.as_graph_def(), checkpoint_prefix, "graph"+str(nn)+".pb", as_text=False)
-                    print("Saved model {} with checkpoint to {}\n".format(nn, checkpoint_prefix))
+        # Evaluate on Validataion Data
+        sum_val_correct=0.0
+        if current_step % (FLAGS.evaluate_every) == 0:
+            print("\nEvaluation:")
+            dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
+            for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
+                if len(y_dev_b)<1:
+                    continue
+                summary , batch_val_correct = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
+                sum_val_correct = sum_val_correct + batch_val_correct
+                test_writer.add_summary(summary, current_step)
+            print("total_val_correct={}/total_val={} \n".format(sum_val_correct, len(dev_set[2])))
+        
+        # Update stored model
+        if current_step % (FLAGS.evaluate_every) == 0:
+            if sum_val_correct >= max_validation_correct:
+                max_validation_correct = sum_val_correct
+                saver.save(sess, checkpoint_prefix, global_step=current_step)
+                tf.train.write_graph(sess.graph.as_graph_def(), checkpoint_prefix, "graph"+str(nn)+".pb", as_text=False)
+                print("Saved model {} with checkpoint to {}\n".format(nn, checkpoint_prefix))
 
         epoch_end_time = time.time()
         print("Total time for {} th-epoch is {}".format(nn, epoch_end_time-epoch_start_time))
