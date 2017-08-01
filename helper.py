@@ -119,7 +119,8 @@ class InputHelper(object):
         Generates a batch iterator for a dataset.
         """
         data_size = len(y)
-        num_batches_per_epoch = int(data_size/batch_size) + 1
+        temp = int(data_size/batch_size)
+        num_batches_per_epoch = temp+1 if (data_size%batch_size) else temp
         
         for epoch in range(num_epochs):
             # Shuffle the data at each epoch
@@ -183,7 +184,7 @@ class InputHelper(object):
         i1=0
         train_set=[]
         dev_set=[]
-        sum_no_of_batches = 0
+
         
         # Randomly shuffle data
         np.random.seed(131)
@@ -203,7 +204,9 @@ class InputHelper(object):
         x2_train, x2_dev = x2_shuffled[:dev_idx], x2_shuffled[dev_idx:]
         y_train, y_dev = y_shuffled[:dev_idx], y_shuffled[dev_idx:]
         print("Train/Dev split for {}: {:d}/{:d}".format(training_paths, len(y_train), len(y_dev)))
-        sum_no_of_batches = sum_no_of_batches+(len(y_train)//batch_size)
+
+        temp = len(y_train)//batch_size
+        sum_no_of_batches = temp + 1 if len(y_train%batch_size) else temp
         train_set=(x1_train,x2_train,y_train)
         dev_set=(x1_dev,x2_dev,y_dev)
         gc.collect()
