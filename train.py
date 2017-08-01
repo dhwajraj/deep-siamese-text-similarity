@@ -201,7 +201,7 @@ with tf.Graph().as_default():
     start_time = time.time()
     for nn in xrange(FLAGS.num_epochs):
         print("Epoch Number: {}".format(nn))
-        epoch_start_time = start_time
+        epoch_start_time = time.time()
         sum_train_correct=0.0
         train_epoch_loss=0.0
         for kk in xrange(sum_no_of_batches):
@@ -213,13 +213,13 @@ with tf.Graph().as_default():
             train_writer.add_summary(summary, current_step)
             sum_train_correct = sum_train_correct + train_batch_correct    
             train_epoch_loss = train_epoch_loss + train_batch_loss
-        print("train_loss ={} \n".format{train_epoch_loss})
+        print("train_loss ={} \n".format(train_epoch_loss))
         print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
             
         # Evaluate on Validataion Data
-        sum_val_correct=0.0
-        test_epoch_loss=0.0
         if current_step % (FLAGS.evaluate_every) == 0:
+            sum_val_correct=0.0
+            test_epoch_loss=0.0
             print("\nEvaluation:")
             dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
             for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
