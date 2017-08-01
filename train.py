@@ -7,7 +7,7 @@ import os
 import time
 import datetime
 import gc
-from helper import InputHelper
+from helper import InputHelper, save_plot
 from siamese_network import SiameseLSTM
 import gzip
 from random import random
@@ -27,7 +27,7 @@ tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 2, "Batch Size (default: 10)")
 tf.flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 2, "Evaluate model on dev set after this many epochs (default: 100)")
+#tf.flags.DEFINE_integer("evaluate_every", 2, "Evaluate model on dev set after this many epochs (default: 100)")
 tf.flags.DEFINE_integer("checkpoint_every", 2, "Save model after this many epochs (default: 100)")
 
 # Misc Parameters
@@ -128,7 +128,7 @@ with tf.Graph().as_default():
 
 
     train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train', graph=tf.get_default_graph())
-    test_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/test' , graph=tf.get_default_graph())
+    val_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/val' , graph=tf.get_default_graph())
     
     def train_step(x1_batch, x2_batch, y_batch):
         
@@ -199,6 +199,9 @@ with tf.Graph().as_default():
     ptr=0
     max_validation_correct=0.0
     start_time = time.time()
+    train_accuracy, val_accuracy = [] , []
+    train_loss, val_loss = [], []
+
     for nn in xrange(FLAGS.num_epochs):
         print("Epoch Number: {}".format(nn))
         epoch_start_time = time.time()
@@ -213,37 +216,45 @@ with tf.Graph().as_default():
             train_writer.add_summary(summary, current_step)
             sum_train_correct = sum_train_correct + train_batch_correct    
             train_epoch_loss = train_epoch_loss + train_batch_loss
-        print("train_loss ={} \n".format(train_epoch_loss))
-        print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
-            
-        # Evaluate on Validataion Data
-        if current_step % (FLAGS.evaluate_every) == 0:
-            sum_val_correct=0.0
-            test_epoch_loss=0.0
-            print("\nEvaluation:")
-            dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
-            for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
-                if len(y_dev_b)<1:
-                    continue
-                summary , batch_val_correct , test_batch_loss = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
-                sum_val_correct = sum_val_correct + batch_val_correct
-                test_writer.add_summary(summary, current_step)
-                test_epoch_loss = test_epoch_loss + test_batch_loss
-            print("test_loss ={} \n".format{test_epoch_loss})
-            print("total_val_correct={}/total_val={} \n".format(sum_val_correct, len(dev_set[2])))
-        
+        print("train_loss ={}".format(train_epoch_loss))
+        print("total_train_correct={}/total_train={}".format(sum_train_correct, len(train_set[2])))
+        train_accuracy.append(sum_train_correct)
+        train_loss.append(train_epoch_loss)
+
+        # Evaluate on Validataion Data for every epoch
+        #if current_step % (FLAGS.evaluate_every) == 0:
+        sum_val_correct=0.0
+        val_epoch_loss=0.0
+        print("\nEvaluation:")
+        dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
+        for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
+            if len(y_dev_b)<1:
+                continue
+            summary , batch_val_correct , val_batch_loss = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
+            sum_val_correct = sum_val_correct + batch_val_correct
+            val_writer.add_summary(summary, current_step)
+            val_epoch_loss = val_epoch_loss + val_batch_loss
+        print("val_loss ={}".format(val_epoch_loss))
+        print("total_val_correct={}/total_val={}".format(sum_val_correct, len(dev_set[2])))
+        val_accuracy.append(sum_val_correct)
+        val_loss.append(val_epoch_loss)
+    
         # Update stored model
         if current_step % (FLAGS.evaluate_every) == 0:
             if sum_val_correct >= max_validation_correct:
                 max_validation_correct = sum_val_correct
                 saver.save(sess, checkpoint_prefix, global_step=current_step)
                 tf.train.write_graph(sess.graph.as_graph_def(), checkpoint_prefix, "graph"+str(nn)+".pb", as_text=False)
-                print("Saved model {} with checkpoint to {}\n".format(nn, checkpoint_prefix))
+                print("Saved model {} with checkpoint to {}".format(nn, checkpoint_prefix))
 
         epoch_end_time = time.time()
-        print("Total time for {} th-epoch is {}".format(nn, epoch_end_time-epoch_start_time))
+        print("Total time for {} th-epoch is {}\n".format(nn, epoch_end_time-epoch_start_time))
 
     end_time = time.time()
     print("Total time for {} epochs is {}".format(FLAGS.num_epochs, end_time-start_time))
+
+    save_plot(train_accuracy, val_accuracy, 'epochs', 'accuracy', 'Accuracy vs epochs', [0, FLAGS.num_epochs-1, 0, 1],  ['train','val' ],'./accuracy_'+str(10))
+    save_plot(train_loss, val_loss, 'epochs', 'loss', 'Loss vs epochs', [0, FLAGS.num_epochs-1, 0, 50],  ['train','val' ],'./accuracy_'+str(10))
+
 
 #"""

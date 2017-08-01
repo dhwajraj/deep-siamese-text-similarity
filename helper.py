@@ -220,3 +220,13 @@ class InputHelper(object):
         gc.collect()
         return x1,x2, y
 
+def save_plot(val1, val2, xlabel, ylabel, title, axis, legend,path):
+    plt.figure()
+    plt.plot(val1, '*r--', val2, '^b-')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.axis(axis)
+    plt.legend(legend)
+    plt.savefig(path+'.pdf')
+

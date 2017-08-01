@@ -7,13 +7,13 @@ class SiameseLSTM(object):
     Uses an character embedding layer, followed by a biLSTM and Energy Loss layer.
     """
     
-    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length):
+    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, num_lstm_layers):
         n_input=embedding_size
         n_steps=sequence_length
         #n_hidden layer_ number of features
-        n_hidden= 30
+        n_hidden=30
         #num-layers of lstm n_layers=2 => input(t)-> lstm(1)->lstm(2)->output(t)
-        n_layers=1
+        n_layers=num_lstm_layers
         
         # Prepare data shape to match `bidirectional_rnn` function requirements
         # Current data input shape: (batch_size, n_steps, n_input) (?, seq_len, embedding_size)
@@ -59,8 +59,8 @@ class SiameseLSTM(object):
       self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size):
 
       # Placeholders for input, output and dropout
-      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1")
-      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2")
+      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1", 1)
+      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2", 1)
       self.input_y = tf.placeholder(tf.float32, [None], name="input_y")
       self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
