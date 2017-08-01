@@ -25,10 +25,10 @@ tf.flags.DEFINE_integer("hidden_units", 100, "Number of hidden units in softmax 
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 8, "Batch Size (default: 10)")
-tf.flags.DEFINE_integer("num_epochs", 25, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 1, "Evaluate model on dev set after this many epochs (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 1, "Save model after this many epochs (default: 100)")
+tf.flags.DEFINE_integer("batch_size", 2, "Batch Size (default: 10)")
+tf.flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
+tf.flags.DEFINE_integer("evaluate_every", 2, "Evaluate model on dev set after this many epochs (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 2, "Save model after this many epochs (default: 100)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", False, "Allow device soft device placement")
@@ -210,7 +210,7 @@ with tf.Graph().as_default():
             sum_train_correct = sum_train_correct + train_batch_correct    
             current_step = tf.train.global_step(sess, global_step)
             train_writer.add_summary(summary, current_step)
-            print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
+        print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
             
             # Evaluate on Validataion Data
             sum_val_correct=0.0
