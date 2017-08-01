@@ -29,6 +29,8 @@ tf.flags.DEFINE_integer("batch_size", 2, "Batch Size (default: 10)")
 tf.flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
 #tf.flags.DEFINE_integer("evaluate_every", 2, "Evaluate model on dev set after this many epochs (default: 100)")
 tf.flags.DEFINE_integer("checkpoint_every", 2, "Save model after this many epochs (default: 100)")
+tf.flags.DEFINE_integer("num_lstm_layers", 1, "Number of LSTM layers(default: 1)")
+tf.flags.DEFINE_integer("hidden_dim", 20, "Number of LSTM layers(default: 2)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", False, "Allow device soft device placement")
@@ -80,7 +82,9 @@ with tf.Graph().as_default():
             embedding_size=FLAGS.embedding_dim,
             hidden_units=FLAGS.hidden_units,
             l2_reg_lambda=FLAGS.l2_reg_lambda,
-            batch_size=FLAGS.batch_size)
+            batch_size=FLAGS.batch_size,
+            num_lstm_layers=FLAGS.num_lstm_layers,
+            hidden_unit_dim=FLAGS.hidden_dim)
         
 
         # Define Training procedure
@@ -253,8 +257,7 @@ with tf.Graph().as_default():
     end_time = time.time()
     print("Total time for {} epochs is {}".format(FLAGS.num_epochs, end_time-start_time))
 
-    save_plot(train_accuracy, val_accuracy, 'epochs', 'accuracy', 'Accuracy vs epochs', [0, FLAGS.num_epochs-1, 0, 1],  ['train','val' ],'./accuracy_'+str(10))
-    save_plot(train_loss, val_loss, 'epochs', 'loss', 'Loss vs epochs', [0, FLAGS.num_epochs-1, 0, 50],  ['train','val' ],'./accuracy_'+str(10))
-
+    save_plot(train_accuracy, val_accuracy, 'epochs', 'accuracy', 'Accuracy vs epochs', [0, FLAGS.num_epochs-1, 0, 1],  ['train','val' ],'./accuracy_'+str(FLAGS.hidden_dim))
+    save_plot(train_loss, val_loss, 'epochs', 'loss', 'Loss vs epochs', [0, FLAGS.num_epochs-1, 0, 50],  ['train','val' ],'./accuracy_'+str(FLAGS.hidden_dim))
 
 #"""

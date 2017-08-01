@@ -7,11 +7,11 @@ class SiameseLSTM(object):
     Uses an character embedding layer, followed by a biLSTM and Energy Loss layer.
     """
     
-    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, num_lstm_layers):
+    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, num_lstm_layers, hidden_unit_dim):
         n_input=embedding_size
         n_steps=sequence_length
         #n_hidden layer_ number of features
-        n_hidden=30
+        n_hidden=hidden_unit_dim
         #num-layers of lstm n_layers=2 => input(t)-> lstm(1)->lstm(2)->output(t)
         n_layers=num_lstm_layers
         
@@ -56,11 +56,11 @@ class SiameseLSTM(object):
         return tf.reduce_sum(tmp +tmp2)/batch_size/2
     
     def __init__(
-      self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size):
+      self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size, num_lstm_layers, hidden_unit_dim):
 
       # Placeholders for input, output and dropout
-      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1", 1)
-      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2", 1)
+      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1")
+      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2")
       self.input_y = tf.placeholder(tf.float32, [None], name="input_y")
       self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
@@ -69,8 +69,8 @@ class SiameseLSTM(object):
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
-        self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", input_size, sequence_length)
-        self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", input_size, sequence_length)
+        self.out1=self.BiRNN(self.input_x1, self.dropout_keep_prob, "side1", input_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim)
+        self.out2=self.BiRNN(self.input_x2, self.dropout_keep_prob, "side2", input_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim)
         self.distance = tf.reduce_sum(tf.abs(tf.subtract(self.out1,self.out2)),1,keep_dims=True)
         self.distance = tf.reshape(self.distance, [-1])
         self.distance = tf.exp(-self.distance, name="distance")
