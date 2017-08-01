@@ -152,14 +152,14 @@ with tf.Graph().as_default():
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
         _, step, loss, dist, summary = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
-        time_str = datetime.datetime.now().isoformat()
+        #time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
         d[d>=0.5]=1
         d[d<0.5]=0
         correct = np.sum(y_batch==d)
-        print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
+        #print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
-        return summary, correct
+        return summary, correct, loss
 
     def dev_step(x1_batch, x2_batch, y_batch):
         
@@ -183,14 +183,14 @@ with tf.Graph().as_default():
                              siameseModel.dropout_keep_prob: FLAGS.dropout_keep_prob,
             }
         step, loss, dist, summary = sess.run([global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
-        time_str = datetime.datetime.now().isoformat()
+        #time_str = datetime.datetime.now().isoformat()
         d = np.copy(dist)
         d[d>=0.5]=1
         d[d<0.5]=0
         correct = np.sum(y_batch==d)
-        print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
+        #print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
-        return summary, correct
+        return summary, correct, loss
 
     # Generate batches
     batches=inpH.batch_iter(
@@ -200,29 +200,36 @@ with tf.Graph().as_default():
     max_validation_correct=0.0
     start_time = time.time()
     for nn in xrange(FLAGS.num_epochs):
+        print("Epoch Number: {}".format(nn))
         epoch_start_time = start_time
         sum_train_correct=0.0
+        train_epoch_loss=0.0
         for kk in xrange(sum_no_of_batches):
             x1_batch,x2_batch, y_batch = batches.next()
             if len(y_batch)<1:
                 continue
-            summary, train_batch_correct =train_step(x1_batch, x2_batch, y_batch)
-            sum_train_correct = sum_train_correct + train_batch_correct    
+            summary, train_batch_correct, train_batch_loss =train_step(x1_batch, x2_batch, y_batch)
             current_step = tf.train.global_step(sess, global_step)
             train_writer.add_summary(summary, current_step)
+            sum_train_correct = sum_train_correct + train_batch_correct    
+            train_epoch_loss = train_epoch_loss + train_batch_loss
+        print("train_loss ={} \n".format{train_epoch_loss})
         print("total_train_correct={}/total_train={} \n".format(sum_train_correct, len(train_set[2])))
             
         # Evaluate on Validataion Data
         sum_val_correct=0.0
+        test_epoch_loss=0.0
         if current_step % (FLAGS.evaluate_every) == 0:
             print("\nEvaluation:")
             dev_batches = inpH.batch_iter(dev_set[0],dev_set[1],dev_set[2], FLAGS.batch_size, 1, convModel.spec)
             for (x1_dev_b,x2_dev_b,y_dev_b) in dev_batches:
                 if len(y_dev_b)<1:
                     continue
-                summary , batch_val_correct = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
+                summary , batch_val_correct , test_batch_loss = dev_step(x1_dev_b, x2_dev_b, y_dev_b)
                 sum_val_correct = sum_val_correct + batch_val_correct
                 test_writer.add_summary(summary, current_step)
+                test_epoch_loss = test_epoch_loss + test_batch_loss
+            print("test_loss ={} \n".format{test_epoch_loss})
             print("total_val_correct={}/total_val={} \n".format(sum_val_correct, len(dev_set[2])))
         
         # Update stored model
