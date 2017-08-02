@@ -130,7 +130,7 @@ with tf.Graph().as_default():
     #print all trainable parameters
     tvar = tf.trainable_variables()
     for i, var in enumerate(tvar):
-        print("{%s}".format(var.name))
+        print("{}".format(var.name))
     
     print("init all variables")
     graph_def = tf.get_default_graph().as_graph_def()

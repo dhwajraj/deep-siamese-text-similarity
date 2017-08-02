@@ -22,8 +22,8 @@ class Conv(object):
             
     def conv(self, input, filter_size, in_channels, out_channels, name, strides, padding, groups):
         with tf.variable_scope(name) as scope:
-            filt = tf.get_variable('weights', shape=[filter_size, filter_size, int(in_channels/groups), out_channels])
-            bias = tf.get_variable('biases',  shape=[out_channels])
+            filt = tf.get_variable('weights', shape=[filter_size, filter_size, int(in_channels/groups), out_channels], trainable=False)
+            bias = tf.get_variable('biases',  shape=[out_channels], trainable=False)
         if groups == 1:
             return tf.nn.relu(tf.nn.bias_add(tf.nn.conv2d(input, filt, strides=strides, padding=padding), bias))
         else:
@@ -38,8 +38,8 @@ class Conv(object):
     def fc(self, input, in_channels, out_channels, name, relu):
         input = tf.reshape(input , [-1, in_channels])
         with tf.variable_scope(name) as scope:
-            filt = tf.get_variable('weights', shape=[in_channels , out_channels])
-            bias = tf.get_variable('biases',  shape=[out_channels])
+            filt = tf.get_variable('weights', shape=[in_channels , out_channels], trainable=False)
+            bias = tf.get_variable('biases',  shape=[out_channels], trainable=False)
         if relu:
             return tf.nn.relu(tf.nn.bias_add(tf.matmul(input, filt), bias))
         else:

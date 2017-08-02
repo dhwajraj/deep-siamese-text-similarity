@@ -6,8 +6,13 @@ class SiameseLSTM(object):
     A LSTM based deep Siamese network for text similarity.
     Uses an character embedding layer, followed by a biLSTM and Energy Loss layer.
     """
-    
-    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, num_lstm_layers, hidden_unit_dim, loss):
+    def LSTMcell(self, n_hidden, reuse): 
+        if  reuse:
+            return tf.contrib.rnn.BasicLSTMCell(n_hidden, reuse=reuse)
+        else:
+            return tf.contrib.rnn.BasicLSTMCell(n_hidden,)
+
+    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, num_lstm_layers, hidden_unit_dim, reuse):
         n_input=embedding_size
         n_steps=sequence_length
         #n_hidden layer_ number of features
@@ -30,15 +35,22 @@ class SiameseLSTM(object):
         # Forward direction cell
         with tf.name_scope("fw"+scope),tf.variable_scope("fw"+scope):
             #print(tf.get_variable_scope().name)
-            fw_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
-            lstm_fw_cell = tf.contrib.rnn.DropoutWrapper(fw_cell,output_keep_prob=dropout)
-            lstm_fw_cell_m=tf.contrib.rnn.MultiRNNCell([lstm_fw_cell]*n_layers, state_is_tuple=True)
+            stacked_rnn_fw = []
+            for _ in range(n_layers):
+                fw_cell = self.LSTMcell(n_hidden, reuse)
+                lstm_fw_cell = tf.contrib.rnn.DropoutWrapper(fw_cell,output_keep_prob=dropout)
+                stacked_rnn_fw.append(lstm_fw_cell)
+            lstm_fw_cell_m = tf.contrib.rnn.MultiRNNCell(cells=stacked_rnn_fw, state_is_tuple=True)
         # Backward direction cell
         with tf.name_scope("bw"+scope),tf.variable_scope("bw"+scope):
             #print(tf.get_variable_scope().name)
-            bw_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
-            lstm_bw_cell = tf.contrib.rnn.DropoutWrapper(bw_cell,output_keep_prob=dropout)
-            lstm_bw_cell_m = tf.contrib.rnn.MultiRNNCell([lstm_bw_cell]*n_layers, state_is_tuple=True)
+            stacked_rnn_bw = []
+            for _ in range(n_layers):
+                bw_cell = self.LSTMcell(n_hidden, reuse)
+                #bw_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True, reuse=tf.get_variable_scope().reuse)
+                lstm_bw_cell = tf.contrib.rnn.DropoutWrapper(bw_cell,output_keep_prob=dropout)
+                stacked_rnn_bw.append(lstm_bw_cell)
+            lstm_bw_cell_m = tf.contrib.rnn.MultiRNNCell(cells=stacked_rnn_bw, state_is_tuple=True)
         
         # Get lstm cell output
         #try:
@@ -79,13 +91,13 @@ class SiameseLSTM(object):
           self.embedding1 = self.input_x1 
           self.embedding2 = self.input_x2
 
-      self.embedding1 = tf.reshape(self.embedding1, [None, sequence_length, embedding_size])
-      self.embedding2 = tf.reshape(self.embedding2, [None, sequence_length, embedding_size])
+      self.embedding1 = tf.reshape(self.embedding1, tf.convert_to_tensor([-1, sequence_length, embedding_size]))
+      self.embedding2 = tf.reshape(self.embedding2, tf.convert_to_tensor([-1, sequence_length, embedding_size]))
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
-        self.out1=self.BiRNN(self.embedding1, self.dropout_keep_prob, "side1", embedding_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim)
-        self.out2=self.BiRNN(self.embedding2, self.dropout_keep_prob, "side2", embedding_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim)
+        self.out1=self.BiRNN(self.embedding1, self.dropout_keep_prob, "side1", embedding_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim, reuse=False)
+        self.out2=self.BiRNN(self.embedding2, self.dropout_keep_prob, "side1", embedding_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim, reuse=True)
       
       # define distance and loss functions
       if loss == "AAAI":
