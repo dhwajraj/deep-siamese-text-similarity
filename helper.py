@@ -9,6 +9,9 @@ import gzip
 from random import random
 import sys
 from scipy import misc
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as pyplot
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -221,12 +224,13 @@ class InputHelper(object):
         return x1,x2, y
 
 def save_plot(val1, val2, xlabel, ylabel, title, axis, legend,path):
-    plt.figure()
-    plt.plot(val1, '*r--', val2, '^b-')
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.axis(axis)
-    plt.legend(legend)
-    plt.savefig(path+'.pdf')
+    pyplot.figure()
+    pyplot.plot(val1, '*r--', val2, '^b-')
+    pyplot.xlabel(xlabel)
+    pyplot.ylabel(ylabel)
+    pyplot.title(title)
+    pyplot.axis(axis)
+    pyplot.legend(legend)
+    pyplot.savefig(path+'.pdf')
+    pyplot.clf()
 

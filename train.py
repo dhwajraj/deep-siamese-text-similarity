@@ -12,7 +12,6 @@ from siamese_network import SiameseLSTM
 import gzip
 from random import random
 from amos import Conv
-import matplotlib.pyplot as plt
 
 # Parameters
 # ==================================================
@@ -25,12 +24,12 @@ tf.flags.DEFINE_integer("hidden_units", 100, "Number of hidden units in softmax 
 tf.flags.DEFINE_integer("max_frames", 20, "Maximum Number of frame (default: 20)")
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 2, "Batch Size (default: 10)")
-tf.flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
+tf.flags.DEFINE_integer("batch_size", 8, "Batch Size (default: 10)")
+tf.flags.DEFINE_integer("num_epochs", 10, "Number of training epochs (default: 200)")
 #tf.flags.DEFINE_integer("evaluate_every", 2, "Evaluate model on dev set after this many epochs (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 2, "Save model after this many epochs (default: 100)")
+tf.flags.DEFINE_integer("checkpoint_every", 5, "Save model after this many epochs (default: 100)")
 tf.flags.DEFINE_integer("num_lstm_layers", 1, "Number of LSTM layers(default: 1)")
-tf.flags.DEFINE_integer("hidden_dim", 20, "Number of LSTM layers(default: 2)")
+tf.flags.DEFINE_integer("hidden_dim", 50, "Number of LSTM layers(default: 2)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", False, "Allow device soft device placement")
@@ -89,7 +88,7 @@ with tf.Graph().as_default():
 
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
-        optimizer = tf.train.AdamOptimizer(1e-3)
+        optimizer = tf.train.AdamOptimizer(1e-2)
         print("initialized convModel and siameseModel object")
     
     grads_and_vars=optimizer.compute_gradients(siameseModel.loss)
@@ -253,11 +252,11 @@ with tf.Graph().as_default():
 
         epoch_end_time = time.time()
         print("Total time for {} th-epoch is {}\n".format(nn, epoch_end_time-epoch_start_time))
+        save_plot(train_accuracy, val_accuracy, 'epochs', 'accuracy', 'Accuracy vs epochs', [-0.1, nn+0.1, 0, len(train_set[2])],  ['train','val' ],'./accuracy_'+str(FLAGS.hidden_dim))
+        save_plot(train_loss, val_loss, 'epochs', 'loss', 'Loss vs epochs', [-0.1, nn+0.1, 0, 50],  ['train','val' ],'./loss_'+str(FLAGS.hidden_dim))
 
     end_time = time.time()
     print("Total time for {} epochs is {}".format(FLAGS.num_epochs, end_time-start_time))
 
-    save_plot(train_accuracy, val_accuracy, 'epochs', 'accuracy', 'Accuracy vs epochs', [0, FLAGS.num_epochs-1, 0, 1],  ['train','val' ],'./accuracy_'+str(FLAGS.hidden_dim))
-    save_plot(train_loss, val_loss, 'epochs', 'loss', 'Loss vs epochs', [0, FLAGS.num_epochs-1, 0, 50],  ['train','val' ],'./accuracy_'+str(FLAGS.hidden_dim))
 
 #"""
