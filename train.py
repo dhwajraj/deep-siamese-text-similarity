@@ -30,6 +30,8 @@ tf.flags.DEFINE_integer("num_epochs", 10, "Number of training epochs (default: 2
 tf.flags.DEFINE_integer("checkpoint_every", 5, "Save model after this many epochs (default: 100)")
 tf.flags.DEFINE_integer("num_lstm_layers", 1, "Number of LSTM layers(default: 1)")
 tf.flags.DEFINE_integer("hidden_dim", 50, "Number of LSTM layers(default: 2)")
+tf.flags.DEFINE_string("loss", "contrastive", "Type of Loss functions:: contrastive/AAAI-2016(default: contrastive)")
+tf.flags.DEFINE_boolean("projection", True, "Project Conv Layers Output to a Lower Dimensional Embedding (Default: True)")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", False, "Allow device soft device placement")
@@ -83,7 +85,9 @@ with tf.Graph().as_default():
             l2_reg_lambda=FLAGS.l2_reg_lambda,
             batch_size=FLAGS.batch_size,
             num_lstm_layers=FLAGS.num_lstm_layers,
-            hidden_unit_dim=FLAGS.hidden_dim)
+            hidden_unit_dim=FLAGS.hidden_dim,
+            loss=FLAGS.loss,
+            projection=FLAGS.projection)
         
 
         # Define Training procedure
@@ -221,7 +225,7 @@ with tf.Graph().as_default():
             train_epoch_loss = train_epoch_loss + train_batch_loss
         print("train_loss ={}".format(train_epoch_loss))
         print("total_train_correct={}/total_train={}".format(sum_train_correct, len(train_set[2])))
-        train_accuracy.append(sum_train_correct)
+        train_accuracy.append(sum_train_correct*1.0/len(train_set[2]))
         train_loss.append(train_epoch_loss)
 
         # Evaluate on Validataion Data for every epoch
@@ -239,7 +243,7 @@ with tf.Graph().as_default():
             val_epoch_loss = val_epoch_loss + val_batch_loss
         print("val_loss ={}".format(val_epoch_loss))
         print("total_val_correct={}/total_val={}".format(sum_val_correct, len(dev_set[2])))
-        val_accuracy.append(sum_val_correct)
+        val_accuracy.append(sum_val_correct*1.0/len(dev_set[2]))
         val_loss.append(val_epoch_loss)
     
         # Update stored model
