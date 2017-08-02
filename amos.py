@@ -101,5 +101,5 @@ class Conv(object):
         
         self.model()
         with tf.name_scope("conv"):
-            self.features = tf.reshape(self.net_layers[layer], [-1, self.max_frames, tf.reduce_prod(self.net_layers[layer].get_shape()[1:])] , name="output")
+            self.features = tf.reshape(self.net_layers[layer], [-1, tf.reduce_prod(self.net_layers[layer].get_shape()[1:])] , name="output")
         

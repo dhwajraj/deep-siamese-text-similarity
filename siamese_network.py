@@ -59,8 +59,8 @@ class SiameseLSTM(object):
       self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size, num_lstm_layers, hidden_unit_dim, loss, projection):
 
       # Placeholders for input, output and dropout
-      self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1")
-      self.input_x2 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x2")
+      self.input_x1 = tf.placeholder(tf.float32, [None, input_size], name="input_x1")
+      self.input_x2 = tf.placeholder(tf.float32, [None, input_size], name="input_x2")
       self.input_y = tf.placeholder(tf.float32, [None], name="input_y")
       self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
 
@@ -75,8 +75,12 @@ class SiameseLSTM(object):
           self.embedding2 = tf.matmul(self.input_x2, self.projection_weights)
       else:
         with tf.name_scope("projection"):
+          embedding_size = input_size
           self.embedding1 = self.input_x1 
           self.embedding2 = self.input_x2
+
+      self.embedding1 = tf.reshape(self.embedding1, [None, sequence_length, embedding_size])
+      self.embedding2 = tf.reshape(self.embedding2, [None, sequence_length, embedding_size])
 
       # Create a convolution + maxpool layer for each filter size
       with tf.name_scope("output"):
