@@ -56,7 +56,7 @@ class SiameseLSTM(object):
         return tf.reduce_sum(tmp +tmp2)/batch_size/2
     
     def __init__(
-      self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size, num_lstm_layers, hidden_unit_dim, projection):
+      self, sequence_length, input_size, embedding_size, hidden_units, l2_reg_lambda, batch_size, num_lstm_layers, hidden_unit_dim, loss, projection):
 
       # Placeholders for input, output and dropout
       self.input_x1 = tf.placeholder(tf.float32, [None, sequence_length, input_size], name="input_x1")
@@ -84,14 +84,14 @@ class SiameseLSTM(object):
         self.out2=self.BiRNN(self.embedding2, self.dropout_keep_prob, "side2", embedding_size, sequence_length, num_lstm_layers=num_lstm_layers, hidden_unit_dim=hidden_unit_dim)
       
       # define distance and loss functions
-      if loss = "AAAI":
+      if loss == "AAAI":
         with tf.name_scope("output"):
           self.distance = tf.reduce_sum(tf.abs(tf.subtract(self.out1,self.out2)),1,keep_dims=True)
           self.distance = tf.reshape(self.distance, [-1])
           self.distance = tf.exp(-self.distance, name="distance")
         with tf.name_scope("loss"):
           self.loss = tf.losses.mean_squared_error(self.input_y, self.distance)/batch_size
-      elif loss = "contrastive";
+      elif loss == "contrastive":
         with tf.name_scope("output"):
           self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.out1,self.out2)),1,keep_dims=True))
           self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
@@ -99,7 +99,7 @@ class SiameseLSTM(object):
         with tf.name_scope("loss"):
           self.loss = self.contrastive_loss(self.input_y, self.distance, batch_size)
       else:
-        raise ValueError('{%s} : Loss function is not-defined'.format{loss})
+        raise ValueError(" Loss function is not-defined")
 
       tf.summary.scalar('loss', self.loss) 
    
