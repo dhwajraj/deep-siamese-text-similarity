@@ -7,7 +7,7 @@ import os
 import time
 import datetime
 import gc
-from helper import InputHelper, save_plot
+from helper import InputHelper, save_plot, compute_distance
 from siamese_network import SiameseLSTM
 import gzip
 from random import random
@@ -126,6 +126,11 @@ with tf.Graph().as_default():
     
     #Fix weights for Conv Layers
     convModel.initalize(sess)
+
+    #print all trainable parameters
+    tvar = tf.trainable_variables()
+    for i, var in enumerate(tvar):
+        print("{%s}".format(var.name))
     
     print("init all variables")
     graph_def = tf.get_default_graph().as_graph_def()
@@ -160,9 +165,7 @@ with tf.Graph().as_default():
             }
         _, step, loss, dist, summary = sess.run([tr_op_set, global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
         #time_str = datetime.datetime.now().isoformat()
-        d = np.copy(dist)
-        d[d>=0.5]=1
-        d[d<0.5]=0
+        d=compute_distance(dist, FLAGS.loss)
         correct = np.sum(y_batch==d)
         #print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
@@ -191,9 +194,7 @@ with tf.Graph().as_default():
             }
         step, loss, dist, summary = sess.run([global_step, siameseModel.loss, siameseModel.distance, summaries_merged],  feed_dict)
         #time_str = datetime.datetime.now().isoformat()
-        d = np.copy(dist)
-        d[d>=0.5]=1
-        d[d<0.5]=0
+        d=compute_distance(dist, FLAGS.loss)
         correct = np.sum(y_batch==d)
         #print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, correct))
         #print(y_batch, dist, d)
@@ -261,6 +262,5 @@ with tf.Graph().as_default():
 
     end_time = time.time()
     print("Total time for {} epochs is {}".format(FLAGS.num_epochs, end_time-start_time))
-
 
 #"""

@@ -234,3 +234,13 @@ def save_plot(val1, val2, xlabel, ylabel, title, axis, legend,path):
     pyplot.savefig(path+'.pdf')
     pyplot.clf()
 
+def compute_distance(distance, loss):
+    d = np.copy(distance)
+    if loss = "AAAI":
+        d[d>0.5]=1
+        d[d<0.5]=0
+    elif loss= "contrastive":
+        d[d>0.5]=0 
+        d[d<0.5]=1
+    else:
+        raise ValueError('Unkown loss function {%s}'.format(loss))
