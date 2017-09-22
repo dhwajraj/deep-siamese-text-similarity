@@ -45,6 +45,12 @@ Categories of pairs, it can learn as similar:
 A sample set of learning person name paraphrases have been attached to this repository. To generate full person name disambiguation data follow the steps mentioned at:
 > https://github.com/dhwajraj/dataset-person-name-disambiguation
 
+# Environment
+- numpy 1.11.0
+- tensorflow 1.2.1
+- gensim 1.0.1
+- nltk 3.2.2
+
 # How to run
 ### Training
 ```
