@@ -100,6 +100,6 @@ $ python eval.py --model graph#.pb
 - Evaluation performance : similarity measure for 100,000 pairs (8core cpu) = 1min 40secs
 	- Accuracy 91%
 
-# Refrerences
+# References
 1. [Learning Text Similarity with Siamese Recurrent Networks](http://www.aclweb.org/anthology/W16-16#page=162)
 2. [Siamese Recurrent Architectures for Learning Sentence Similarity](http://www.aaai.org/Conferences/AAAI/2016/Papers/15Mueller12195.pdf)
