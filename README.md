@@ -24,7 +24,7 @@ Given adequate training pairs, this model can learn Semantic as well as structur
 - James B. D. Joshi	= James Joshi
 - James Beaty, Jr. = Beaty
 
-**For phrases, the model learns character based embeddings to identify structural/syntactic similarities.**
+For phrases, the model learns **character based embeddings** to identify structural/syntactic similarities.
 
 **Sentences :**
 - He is smart = He is a wise man.
@@ -34,7 +34,7 @@ Given adequate training pairs, this model can learn Semantic as well as structur
 
 (More examples Ref: semEval dataset)
 
-**For Sentences, the model uses pre-trained word embeddings to identify semantic similarities.**
+For Sentences, the model uses **pre-trained word embeddings** to identify semantic similarities.
 
 Categories of pairs, it can learn as similar:
 - Annotations
@@ -131,7 +131,7 @@ $ python eval.py --model graph#.pb
 	- Accuracy 91%
 	
 **Sentences:**
-- Training time: (8 core cpu) = 1 complete epoch : 8min 10secs (training requires atleast 30 epochs)
+- Training time: (8 core cpu) = 1 complete epoch : 8min 10secs (training requires atleast 50 epochs)
 	- Contrastive Loss : 0.0477
 - Evaluation performance : similarity measure for 100,000 pairs (8core cpu) = 2min 10secs
 	- Accuracy 81%
