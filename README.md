@@ -7,7 +7,7 @@ This code provides architecture for learning two kinds of tasks:
 - Phrase similarity using char level embeddings [1]
 ![siamese lstm phrase similarity](https://cloud.githubusercontent.com/assets/9861437/20479454/405a1aea-b004-11e6-8a27-7bb05cf0a002.png)
 
-- Sentence similarity using char+word level embeddings [2]
+- Sentence similarity using word level embeddings [2]
 ![siamese lstm sentence similarity](https://cloud.githubusercontent.com/assets/9861437/20479493/6ea8ad12-b004-11e6-89e4-53d4d354d32e.png)
 
 For both the tasks mentioned above it uses a multilayer siamese LSTM network and euclidian distance based contrastive loss to learn input pair similairty.
