@@ -51,6 +51,7 @@ Categories of pairs, it can learn as similar:
 
 	> https://github.com/dhwajraj/dataset-person-name-disambiguation
 
+    "person_match.train" : https://drive.google.com/open?id=1HnMv7ulfh8yuq9yIrt_IComGEpDrNyo-
 - **Sentences:** 
 	- A sample set of learning sentence semantic similarity can be downloaded from:
 
