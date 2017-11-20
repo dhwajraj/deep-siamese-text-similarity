@@ -46,22 +46,22 @@ Categories of pairs, it can learn as similar:
 - Summaries
 
 # Training Data
-**Phrases:** 
-A sample set of learning person name paraphrases have been attached to this repository. To generate full person name disambiguation data follow the steps mentioned at:
+- **Phrases:** 
+	- A sample set of learning person name paraphrases have been attached to this repository. To generate full person name disambiguation data follow the steps mentioned at:
 
-> https://github.com/dhwajraj/dataset-person-name-disambiguation
+	> https://github.com/dhwajraj/dataset-person-name-disambiguation
 
-**Sentences:** 
-A sample set of learning sentence semantic similarity can be downloaded from:
+- **Sentences:** 
+	- A sample set of learning sentence semantic similarity can be downloaded from:
 
-"train_snli.txt" : https://drive.google.com/open?id=1itu7IreU_SyUSdmTWydniGxW-JEGTjrv
+	"train_snli.txt" : https://drive.google.com/open?id=1itu7IreU_SyUSdmTWydniGxW-JEGTjrv
 
-This data is generated using SNLI project : 
-> https://nlp.stanford.edu/projects/snli/
+	This data is generated using SNLI project : 
+	> https://nlp.stanford.edu/projects/snli/
 
-word embeddings: any set of pre-trained word embeddings can be utilized in this project. For our testing we had used fastText simple english embeddings from https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
+	 - word embeddings: any set of pre-trained word embeddings can be utilized in this project. For our testing we had used fastText 	simple english embeddings from https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 
-alternate download location for "wiki.simple.vec" is : https://drive.google.com/open?id=1u79f3d2PkmePzyKgubkbxOjeaZCJgCrt
+	alternate download location for "wiki.simple.vec" is : https://drive.google.com/open?id=1u79f3d2PkmePzyKgubkbxOjeaZCJgCrt
 
 # Environment
 - numpy 1.11.0
