@@ -7,21 +7,11 @@ class SiameseLSTM(object):
     Uses an character embedding layer, followed by a biLSTM and Energy Loss layer.
     """
     
-    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length):
-        n_input=embedding_size
-        n_steps=sequence_length
-        n_hidden=n_steps
+    def BiRNN(self, x, dropout, scope, embedding_size, sequence_length, hidden_units):
+        n_hidden=hidden_units
         n_layers=3
-        # Prepare data shape to match `bidirectional_rnn` function requirements
-        # Current data input shape: (batch_size, n_steps, n_input) (?, seq_len, embedding_size)
-        # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
-        # Permuting batch_size and n_steps
-        x = tf.transpose(x, [1, 0, 2])
-        # Reshape to (n_steps*batch_size, n_input)
-        x = tf.reshape(x, [-1, n_input])
-        print(x)
-        # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
-        x = tf.split(x, n_steps, 0)
+        # Prepare data shape to match `static_rnn` function requirements
+        x = tf.unstack(tf.transpose(x, perm=[1, 0, 2]))
         print(x)
         # Define lstm cells with tensorflow
         # Forward direction cell
@@ -76,8 +66,8 @@ class SiameseLSTM(object):
 
         # Create a convolution + maxpool layer for each filter size
         with tf.name_scope("output"):
-            self.out1=self.BiRNN(self.embedded_chars1, self.dropout_keep_prob, "side1", embedding_size, sequence_length)
-            self.out2=self.BiRNN(self.embedded_chars2, self.dropout_keep_prob, "side2", embedding_size, sequence_length)
+            self.out1=self.BiRNN(self.embedded_chars1, self.dropout_keep_prob, "side1", embedding_size, sequence_length, hidden_units)
+            self.out2=self.BiRNN(self.embedded_chars2, self.dropout_keep_prob, "side2", embedding_size, sequence_length, hidden_units)
             self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.out1,self.out2)),1,keep_dims=True))
             self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.out1),1,keep_dims=True)),tf.sqrt(tf.reduce_sum(tf.square(self.out2),1,keep_dims=True))))
             self.distance = tf.reshape(self.distance, [-1], name="distance")

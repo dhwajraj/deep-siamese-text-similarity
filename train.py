@@ -20,14 +20,14 @@ tf.flags.DEFINE_boolean("is_char_based", True, "is character based syntactic sim
                                                "if false then word embedding based semantic similarity is used."
                                                "(default: True)")
 
-tf.flags.DEFINE_string("word2vec_model", "/Users/dhwajraj/Downloads/wiki.simple.vec", "word2vec pre-trained embeddings file (default: None)")
+tf.flags.DEFINE_string("word2vec_model", "wiki.simple.vec", "word2vec pre-trained embeddings file (default: None)")
 tf.flags.DEFINE_string("word2vec_format", "text", "word2vec pre-trained embeddings file format (bin/text/textgz)(default: None)")
 
 tf.flags.DEFINE_integer("embedding_dim", 300, "Dimensionality of character embedding (default: 300)")
 tf.flags.DEFINE_float("dropout_keep_prob", 1.0, "Dropout keep probability (default: 1.0)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
-tf.flags.DEFINE_string("training_files", "/Users/dhwajraj/train_snli.txt", "training file (default: None)")
-tf.flags.DEFINE_integer("hidden_units", 500, "Number of hidden units in softmax regression layer (default:50)")
+tf.flags.DEFINE_string("training_files", "person_match.train2", "training file (default: None)")  #for sentence semantic similarity use "train_snli.txt"
+tf.flags.DEFINE_integer("hidden_units", 50, "Number of hidden units (default:50)")
 
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
@@ -50,12 +50,14 @@ if FLAGS.training_files==None:
     exit()
 
 
-max_document_length=30
+max_document_length=15
 inpH = InputHelper()
 train_set, dev_set, vocab_processor,sum_no_of_batches = inpH.getDataSets(FLAGS.training_files,max_document_length, 10,
                                                                          FLAGS.batch_size, FLAGS.is_char_based)
 trainableEmbeddings=False
-if FLAGS.is_char_based==False:
+if FLAGS.is_char_based==True:
+    FLAGS.word2vec_model = False
+else:
     if FLAGS.word2vec_model==None:
         trainableEmbeddings=True
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
