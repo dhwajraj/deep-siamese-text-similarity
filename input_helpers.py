@@ -15,8 +15,71 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 class InputHelper(object):
-    
+    pre_emb = dict()
+    vocab_processor = None
+    def cleanText(self, s):
+        s = re.sub(r"[^\x00-\x7F]+"," ", s)
+        s = re.sub(r'[\~\!\`\^\*\{\}\[\]\#\<\>\?\+\=\-\_\(\)]+',"",s)
+        s = re.sub(r'( [0-9,\.]+)',r"\1 ", s)
+        s = re.sub(r'\$'," $ ", s)
+        s = re.sub('[ ]+',' ', s)
+        return s.lower()
+
+    def getVocab(self,vocab_path, max_document_length,filter_h_pad):
+        if self.vocab_processor==None:
+            print('locading vocab')
+            vocab_processor = MyVocabularyProcessor(max_document_length-filter_h_pad,min_frequency=0)
+            self.vocab_processor = vocab_processor.restore(vocab_path)
+        return self.vocab_processor
+
+    def loadW2V(self,emb_path, type="bin"):
+        print("Loading W2V data...")
+        num_keys = 0
+        if type=="textgz":
+            # this seems faster than gensim non-binary load
+            for line in gzip.open(emb_path):
+                l = line.strip().split()
+                st=l[0].lower()
+                self.pre_emb[st]=np.asarray(l[1:])
+            num_keys=len(self.pre_emb)
+        if type=="text":
+            # this seems faster than gensim non-binary load
+            for line in open(emb_path):
+                l = line.strip().split()
+                st=l[0].lower()
+                self.pre_emb[st]=np.asarray(l[1:])
+            num_keys=len(self.pre_emb)
+        else:
+            self.pre_emb = Word2Vec.load_word2vec_format(emb_path,binary=True)
+            self.pre_emb.init_sims(replace=True)
+            num_keys=len(self.pre_emb.vocab)
+        print("loaded word2vec len ", num_keys)
+        gc.collect()
+
+    def deletePreEmb(self):
+        self.pre_emb=dict()
+        gc.collect()
+
     def getTsvData(self, filepath):
+        print("Loading training data from "+filepath)
+        x1=[]
+        x2=[]
+        y=[]
+        # positive samples from file
+        for line in open(filepath):
+            l=line.strip().split("\t")
+            if len(l)<2:
+                continue
+            if random() > 0.5:
+                x1.append(l[0].lower())
+                x2.append(l[1].lower())
+            else:
+                x1.append(l[1].lower())
+                x2.append(l[0].lower())
+            y.append(int(l[2]))
+        return np.asarray(x1),np.asarray(x2),np.asarray(y)
+
+    def getTsvDataCharBased(self, filepath):
         print("Loading training data from "+filepath)
         x1=[]
         x2=[]
@@ -101,12 +164,14 @@ class InputHelper(object):
     # ==================================================
     
     
-    def getDataSets(self, training_paths, max_document_length, percent_dev, batch_size):
-        x1_text, x2_text, y=self.getTsvData(training_paths)
-        
+    def getDataSets(self, training_paths, max_document_length, percent_dev, batch_size, is_char_based):
+        if is_char_based:
+            x1_text, x2_text, y=self.getTsvDataCharBased(training_paths)
+        else:
+            x1_text, x2_text, y=self.getTsvData(training_paths)
         # Build vocabulary
         print("Building vocabulary")
-        vocab_processor = MyVocabularyProcessor(max_document_length,min_frequency=0)
+        vocab_processor = MyVocabularyProcessor(max_document_length,min_frequency=0,is_char_based=is_char_based)
         vocab_processor.fit_transform(np.concatenate((x2_text,x1_text),axis=0))
         print("Length of loaded vocabulary ={}".format( len(vocab_processor.vocabulary_)))
         i1=0

@@ -9,17 +9,25 @@ import datetime
 import gc
 from input_helpers import InputHelper
 from siamese_network import SiameseLSTM
+from siamese_network_semantic import SiameseLSTMw2v
 from tensorflow.contrib import learn
 import gzip
 from random import random
 # Parameters
 # ==================================================
 
-tf.flags.DEFINE_integer("embedding_dim", 100, "Dimensionality of character embedding (default: 300)")
+tf.flags.DEFINE_boolean("is_char_based", True, "is character based syntactic similarity. "
+                                               "if false then word embedding based semantic similarity is used."
+                                               "(default: True)")
+
+tf.flags.DEFINE_string("word2vec_model", "wiki.simple.vec", "word2vec pre-trained embeddings file (default: None)")
+tf.flags.DEFINE_string("word2vec_format", "text", "word2vec pre-trained embeddings file format (bin/text/textgz)(default: None)")
+
+tf.flags.DEFINE_integer("embedding_dim", 300, "Dimensionality of character embedding (default: 300)")
 tf.flags.DEFINE_float("dropout_keep_prob", 1.0, "Dropout keep probability (default: 1.0)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularizaion lambda (default: 0.0)")
-tf.flags.DEFINE_string("training_files", "person_match.train2", "training file (default: None)")
-tf.flags.DEFINE_integer("hidden_units", 50, "Number of hidden units in softmax regression layer (default:50)")
+tf.flags.DEFINE_string("training_files", "person_match.train2", "training file (default: None)")  #for sentence semantic similarity use "train_snli.txt"
+tf.flags.DEFINE_integer("hidden_units", 50, "Number of hidden units (default:50)")
 
 # Training parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
@@ -38,12 +46,27 @@ for attr, value in sorted(FLAGS.__flags.items()):
 print("")
 
 if FLAGS.training_files==None:
-    print "Input Files List is empty. use --training_files argument."
+    print("Input Files List is empty. use --training_files argument.")
     exit()
- 
-max_document_length=30
+
+
+max_document_length=15
 inpH = InputHelper()
-train_set, dev_set, vocab_processor,sum_no_of_batches = inpH.getDataSets(FLAGS.training_files,max_document_length, 10, FLAGS.batch_size)
+train_set, dev_set, vocab_processor,sum_no_of_batches = inpH.getDataSets(FLAGS.training_files,max_document_length, 10,
+                                                                         FLAGS.batch_size, FLAGS.is_char_based)
+trainableEmbeddings=False
+if FLAGS.is_char_based==True:
+    FLAGS.word2vec_model = False
+else:
+    if FLAGS.word2vec_model==None:
+        trainableEmbeddings=True
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+          "You are using word embedding based semantic similarity but "
+          "word2vec model path is empty. It is Recommended to use  --word2vec_model  argument. "
+          "Otherwise now the code is automatically trying to learn embedding values (may not help in accuracy)"
+          "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    else:
+        inpH.loadW2V(FLAGS.word2vec_model, FLAGS.word2vec_format)
 
 # Training
 # ==================================================
@@ -55,14 +78,25 @@ with tf.Graph().as_default():
     sess = tf.Session(config=session_conf)
     print("started session")
     with sess.as_default():
-        siameseModel = SiameseLSTM(
-            sequence_length=max_document_length,
-            vocab_size=len(vocab_processor.vocabulary_),
-            embedding_size=FLAGS.embedding_dim,
-            hidden_units=FLAGS.hidden_units,
-            l2_reg_lambda=FLAGS.l2_reg_lambda,
-            batch_size=FLAGS.batch_size)
-
+        if FLAGS.is_char_based:
+            siameseModel = SiameseLSTM(
+                sequence_length=max_document_length,
+                vocab_size=len(vocab_processor.vocabulary_),
+                embedding_size=FLAGS.embedding_dim,
+                hidden_units=FLAGS.hidden_units,
+                l2_reg_lambda=FLAGS.l2_reg_lambda,
+                batch_size=FLAGS.batch_size
+            )
+        else:
+            siameseModel = SiameseLSTMw2v(
+                sequence_length=max_document_length,
+                vocab_size=len(vocab_processor.vocabulary_),
+                embedding_size=FLAGS.embedding_dim,
+                hidden_units=FLAGS.hidden_units,
+                l2_reg_lambda=FLAGS.l2_reg_lambda,
+                batch_size=FLAGS.batch_size,
+                trainableEmbeddings=trainableEmbeddings
+            )
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
         optimizer = tf.train.AdamOptimizer(1e-3)
@@ -119,6 +153,30 @@ with tf.Graph().as_default():
     with open(os.path.join(checkpoint_dir, "graphpb.txt"), 'w') as f:
         f.write(graphpb_txt)
 
+    if FLAGS.word2vec_model :
+        # initial matrix with random uniform
+        initW = np.random.uniform(-0.25,0.25,(len(vocab_processor.vocabulary_), FLAGS.embedding_dim))
+        #initW = np.zeros(shape=(len(vocab_processor.vocabulary_), FLAGS.embedding_dim))
+        # load any vectors from the word2vec
+        print("initializing initW with pre-trained word2vec embeddings")
+        for w in vocab_processor.vocabulary_._mapping:
+            arr=[]
+            s = re.sub('[^0-9a-zA-Z]+', '', w)
+            if w in inpH.pre_emb:
+                arr=inpH.pre_emb[w]
+            elif w.lower() in inpH.pre_emb:
+                arr=inpH.pre_emb[w.lower()]
+            elif s in inpH.pre_emb:
+                arr=inpH.pre_emb[s]
+            elif s.isdigit():
+                arr=inpH.pre_emb["zero"]
+            if len(arr)>0:
+                idx = vocab_processor.vocabulary_.get(w)
+                initW[idx]=np.asarray(arr).astype(np.float32)
+        print("Done assigning intiW. len="+str(len(initW)))
+        inpH.deletePreEmb()
+        gc.collect()
+        sess.run(siameseModel.W.assign(initW))
 
     def train_step(x1_batch, x2_batch, y_batch):
         """
@@ -142,7 +200,7 @@ with tf.Graph().as_default():
         time_str = datetime.datetime.now().isoformat()
         print("TRAIN {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         train_summary_writer.add_summary(summaries, step)
-        print y_batch, dist, sim
+        print(y_batch, dist, sim)
 
     def dev_step(x1_batch, x2_batch, y_batch):
         """
@@ -166,7 +224,7 @@ with tf.Graph().as_default():
         time_str = datetime.datetime.now().isoformat()
         print("DEV {}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
         dev_summary_writer.add_summary(summaries, step)
-        print y_batch, sim
+        print (y_batch, sim)
         return accuracy
 
     # Generate batches
