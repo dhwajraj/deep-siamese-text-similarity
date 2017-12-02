@@ -138,4 +138,4 @@ $ python eval.py --model graph#.pb
 
 # References
 1. [Learning Text Similarity with Siamese Recurrent Networks](http://www.aclweb.org/anthology/W16-16#page=162)
-2. [Siamese Recurrent Architectures for Learning Sentence Similarity](http://www.aaai.org/Conferences/AAAI/2016/Papers/15Mueller12195.pdf)
+2. [Siamese Recurrent Architectures for Learning Sentence Similarity](http://www.mit.edu/~jonasm/info/MuellerThyagarajan_AAAI16.pdf)
