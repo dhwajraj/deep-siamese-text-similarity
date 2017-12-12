@@ -30,8 +30,8 @@ class MyVocabularyProcessor(learn.preprocessing.VocabularyProcessor):
             tokenizer_fn=tokenizer_char
         else:
             tokenizer_fn=tokenizer_word
-        self.sup = super(MyVocabularyProcessor,self)
-        self.sup.__init__(max_document_length,min_frequency,vocabulary,tokenizer_fn)
+        sup = super(MyVocabularyProcessor,self)
+        sup.__init__(max_document_length,min_frequency,vocabulary,tokenizer_fn)
 
 
     def transform(self, raw_documents):
