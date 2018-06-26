@@ -1,3 +1,5 @@
+**This project is a prototype for experimental purposes only and production grade code is not released here.**
+
 # Deep LSTM siamese network for text similarity
 
 It is a tensorflow based implementation of deep siamese LSTM network to capture phrase/sentence similarity using character embeddings.
