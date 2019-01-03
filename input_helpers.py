@@ -212,7 +212,6 @@ class InputHelper(object):
 
         x1 = np.asarray(list(vocab_processor.transform(x1_temp)))
         x2 = np.asarray(list(vocab_processor.transform(x2_temp)))
-        # Randomly shuffle data
         del vocab_processor
         gc.collect()
         return x1,x2, y
