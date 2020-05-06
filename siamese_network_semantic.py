@@ -26,7 +26,7 @@ class SiameseLSTMw2v(object):
 
             outputs, _ = tf.nn.static_rnn(lstm_fw_cell_m, x, dtype=tf.float32)
         return outputs[-1]
-    
+
     def contrastive_loss(self, y,d,batch_size):
         tmp= y *tf.square(d)
         #tmp= tf.mul(y,tf.square(d))
@@ -64,6 +64,6 @@ class SiameseLSTMw2v(object):
             self.loss = self.contrastive_loss(self.input_y,self.distance, batch_size)
         #### Accuracy computation is outside of this class.
         with tf.name_scope("accuracy"):
-            self.temp_sim = tf.subtract(tf.ones_like(self.distance),tf.rint(self.distance)) #auto threshold 0.5
+            self.temp_sim = tf.subtract(tf.ones_like(self.distance),tf.rint(self.distance), name="temp_sim") #auto threshold 0.5
             correct_predictions = tf.equal(self.temp_sim, self.input_y)
             self.accuracy=tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
